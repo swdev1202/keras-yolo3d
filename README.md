@@ -19,5 +19,5 @@ will produce 000000.jpg
 The output format can be .bmp, .jpg, .png (whatever pillow supports).
 
 ## References
-[Ronny Restrepo's Birdeye View](http://ronny.rest/tutorials/module/pointclouds_01/point_cloud_birdseye/)
+[Ronny Restrepo's Birdeye View](http://ronny.rest/tutorials/module/pointclouds_01/point_cloud_birdseye/)  
 [Alex Staravoitau's Visualizing Lidar Data](https://navoshta.com/kitti-lidar/)
