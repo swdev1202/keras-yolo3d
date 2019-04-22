@@ -1,0 +1,14 @@
+*.pdf
+*.jpg
+*.bmp
+*.png
+.ipynb_checkpoints/
+
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+venv/
+ENV/
