@@ -1,14 +1,14 @@
 import csv
 import numpy as np
 
-input_file = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/test1/gt_3d/gt_3d_annotations.csv"
-output_file = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/test1/gt_3d/gt_yolo3d_annotations.txt"
+input_file = "annotations/gt_3d_annotations.csv"
+output_file = "annotations/gt_yolo3d_annotations.txt"
 
-fwd_range = [0, 60.8]
-side_range = [-30.4, 30.4]
+fwd_range = [0, 15.2]
+side_range = [-7.6, 7.6]
 
-x_res = 0.1 # m/px
-y_res = 0.1 # m/px
+x_res = 0.025 # m/px
+y_res = 0.025 # m/px
 
 # Input 3D Ground Truth format
 # <filename> <x_pos, y_pos, z_pos, x_ori, y_ori, z_ori, w_ori, x_size, y_size, z_size, label>
@@ -53,7 +53,7 @@ def convert_3d_annotations(input_file, output_file):
                 if not ((float(x_pos) < fwd_range[0]) or (float(x_pos) > fwd_range[1]) or (float(y_pos) < side_range[0]) or (float(y_pos) > side_range[1])):
                     # If not out of range
                     yaw = get_yaw_angle(float(x_ori), float(y_ori), float(z_ori), float(w_ori))
-                    bboxes_str += str(x_pos*x_res) + "," + str(y_pos*y_res) + "," + str(z_pos) + "," + str(yaw) + "," + str(x_size*x_res) + "," + str(y_size*y_res) + "," + str(z_size) + ","
+                    bboxes_str += str(int(float(x_pos)/x_res)) + "," + str(int(float(y_pos)/y_res)) + "," + str(z_pos) + "," + str(yaw) + "," + str(int(float(x_size)/x_res)) + "," + str(int(float(y_size)/y_res)) + "," + str(z_size) + ","
                     bboxes_str += str(label) + " "
                 
             if bboxes_str:

@@ -4,6 +4,9 @@
 *.png
 .ipynb_checkpoints/
 
+*.pcd
+*.npy
+
 
 # dotenv
 .env
@@ -12,3 +15,5 @@
 .venv
 venv/
 ENV/
+
+annotations/
