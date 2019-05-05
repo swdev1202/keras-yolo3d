@@ -8,5 +8,5 @@ This is a YOLO3D implementation in Keras using a TensorFlow Backend.
 
 ## References
 [Ronny Restrepo's Birdeye View](http://ronny.rest/tutorials/module/pointclouds_01/point_cloud_birdseye/)  
-[Alex Staravoitau's Visualizing Lidar Data](https://navoshta.com/kitti-lidar/)
-[MLBLR YoloV2](https://mlblr.com/includes/mlai/index.html#yolov2)
+[Alex Staravoitau's Visualizing Lidar Data](https://navoshta.com/kitti-lidar/)  
+[MLBLR YoloV2](https://mlblr.com/includes/mlai/index.html#yolov2)   
