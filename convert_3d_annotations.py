@@ -1,8 +1,8 @@
 import csv
 import numpy as np
 
-input_file = "annotations/gt_3d_annotations.csv"
-output_file = "annotations/gt_yolo3d_annotations.txt"
+input_file = "annotations/gt_3d_annotations_2.csv"
+output_file = "annotations/gt_yolo3d_annotations_2.txt"
 
 fwd_range = [0, 15.2]
 side_range = [-7.6, 7.6]

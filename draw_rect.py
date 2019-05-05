@@ -32,13 +32,6 @@ print(X_PIXEL_MAX)
 print(Y_PIXEL_MIN)
 print(Y_PIXEL_MAX)
 
-cnt = np.array([
-    [[X_PIXEL_MIN,Y_PIXEL_MIN]],
-    [[X_PIXEL_MAX,Y_PIXEL_MIN]],
-    [[X_PIXEL_MIN,Y_PIXEL_MAX]],
-    [[X_PIXEL_MAX,Y_PIXEL_MAX]]
-])
-
 rect_img = cv2.rectangle(img, (X_PIXEL_MIN,Y_PIXEL_MIN), (X_PIXEL_MAX,Y_PIXEL_MAX), (0,0,225), 1)
 cv2.imshow('image', rect_img)
 cv2.imwrite('temp.png',rect_img)
