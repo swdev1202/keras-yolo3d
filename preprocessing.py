@@ -134,7 +134,7 @@ def parse_annotations(ann_file, img_dir):
                 obj_dict['xmax'] = int(x_pos + x_size//2)
                 obj_dict['ymin'] = int(y_pos - y_size//2)
                 obj_dict['ymax'] = int(y_pos + y_size//2)
-                obj_dict['yaw'] = yaw
+                obj_dict['yaw'] = yaw / np.pi
                 obj_dict['z'] = z_pos
                 obj_dict['height'] = z_size
 
@@ -174,7 +174,7 @@ class BatchGenerator(Sequence):
         return len(self.images)
     
     def load_image(self, i):
-        return cv2.imread(self.images[i]['filename'])
+        return cv2.imread(self.images[i]['filename'])[:,:,0:2]
     
     def on_epoch_end(self):
         if self.shuffle: np.random.shuffle(self.images)
@@ -208,7 +208,7 @@ class BatchGenerator(Sequence):
         instance_count = 0
 
         # Input images
-        x_batch = np.zeros((r_bound - l_bound, self.config['IMAGE_H'], self.config['IMAGE_W'], 3))
+        x_batch = np.zeros((r_bound - l_bound, self.config['IMAGE_H'], self.config['IMAGE_W'], 2))
 
         # list of self.config[self.config['TRUE_BOX_BUFFER'] GT boxes
         b_batch = np.zeros((r_bound - l_bound, 1, 1, 1, self.config['TRUE_BOX_BUFFER'], 7))
@@ -218,7 +218,7 @@ class BatchGenerator(Sequence):
 
         for train_instance in self.images[l_bound:r_bound]:
             image_name = train_instance['filename']
-            img = cv2.imread(image_name)
+            img = cv2.imread(image_name)[:,:,0:2]
 
             if img is None: print('Cannot find ', image_name)
 
@@ -296,6 +296,6 @@ class BatchGenerator(Sequence):
             # increase instance counter in current batch
             instance_count += 1  
 
-        print(' new batch created', idx)
+        print('new batch created', idx)
 
         return [x_batch, b_batch], y_batch

@@ -38,7 +38,7 @@ COORD_SCALE      = 1.0
 CLASS_SCALE      = 1.0
 YAW_SCALE        = 1.0
 
-BATCH_SIZE       = 2
+BATCH_SIZE       = 1
 WARM_UP_BATCHES  = 0
 TRUE_BOX_BUFFER  = 20
 
@@ -48,7 +48,7 @@ TRUE_BOX_BUFFER  = 20
 def space_to_depth_x2(x):
     return tf.space_to_depth(x, block_size=2)
 
-input_image = Input(shape=(IMAGE_H, IMAGE_W, 3)) # Originally 3
+input_image = Input(shape=(IMAGE_H, IMAGE_W, 2)) # Originally 3
 true_boxes  = Input(shape=(1, 1, 1, TRUE_BOX_BUFFER , 7)) # Originally 4
 
 def create_yolo3d_model():
@@ -172,15 +172,21 @@ def create_yolo3d_model():
     # skip_connection = Lambda(space_to_depth_x2)(skip_connection)
 
     # x = concatenate([skip_connection, x])
+    # x = Conv2D(64, (1,1), strides=(1,1), padding='same', name='conv_21', use_bias=False)(x)
+    # x = BatchNormalization(name='norm_21')(x)
+    # x = LeakyReLU(alpha=0.1)(x)
 
     # Layer 21
-    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_21', use_bias=False)(x)
-    x = BatchNormalization(name='norm_21')(x)
+    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_22', use_bias=False)(x)
+    x = BatchNormalization(name='norm_22')(x)
     x = LeakyReLU(alpha=0.1)(x)
+    # x = MaxPooling2D(pool_size=(2, 2))(x)
 
     # Layer 22
-    x = Conv2D(BOX * (7 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='conv_22')(x)
-    print(x.shape)
+    # x = Conv2D(BOX * (7 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='conv_22')(x)
+    # x = Conv2D(1024, (1,1), name='conv_22', padding='same')(x)
+    x = Conv2D(BOX * (7 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='conv_23')(x)
+    
     # output = Reshape((GRID_H, GRID_W, BOX, 4 + 1 + CLASS))(x)
     output = Reshape((GRID_H, GRID_W, BOX, 7 + 1 + CLASS))(x)  # 8 regressed terms per BOX
 
@@ -204,12 +210,13 @@ def yolo3d_loss(y_true, y_pred):
     seen = tf.Variable(0.)
     total_recall = tf.Variable(0.)
 
+    print("========================================================")
     """
     Adjust prediction
     """
     ### adjust x, y and z      
     pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
-    pred_box_z = tf.exp(y_pred[..., 2])
+    pred_box_z = tf.sigmoid(y_pred[..., 2])
 
     ### adjust w, l and h
     pred_box_wl = tf.exp(y_pred[..., 3:5]) * np.reshape(ANCHORS, [1,1,1,BOX,2])
@@ -272,12 +279,12 @@ def yolo3d_loss(y_true, y_pred):
     ### confidence mask: penelize predictors + penalize boxes with low IOU
     # penalize the confidence of the boxes, which have IOU with some ground truth box < 0.6
     true_xy = true_boxes[..., 0:2]
-    true_z = true_boxes[..., 2]
+    # true_z = true_boxes[..., 2]
 
     true_wl = true_boxes[..., 3:5]
-    true_h = true_boxes[..., 5]
+    # true_h = true_boxes[..., 5]
 
-    true_yaw = true_boxes[..., 6]
+    # true_yaw = true_boxes[..., 6]
 
     true_wl_half = true_wl / 2.
     true_mins    = true_xy - true_wl_half
@@ -333,19 +340,20 @@ def yolo3d_loss(y_true, y_pred):
 
     # Add loss_z term
     loss_xy = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    # loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
     # Need to change to wlh
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    # loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
-    loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    # loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
     loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2.
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
     loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-    loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
+    # loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
+    loss = loss_xy  + loss_wl  + loss_conf + loss_class
 
     nb_true_box = tf.reduce_sum(y_true[..., 7])
     nb_pred_box = tf.reduce_sum(tf.cast(true_box_conf > 0.5, tf.float32) * tf.cast(pred_box_conf > 0.3, tf.float32))
