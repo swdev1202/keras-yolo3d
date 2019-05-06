@@ -30,8 +30,8 @@ CLASS            = len(LABELS)
 CLASS_WEIGHTS    = np.ones(CLASS, dtype='float32')
 OBJ_THRESHOLD    = 0.3 #0.5
 NMS_THRESHOLD    = 0.3 #0.45
-ANCHORS          = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
-
+# ANCHORS          = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
+ANCHORS          = [39//2, 52//2, 18//2, 27//2, 27//2, 52//2, 29//2, 29//2, 24//2, 32//2]
 NO_OBJECT_SCALE  = 1.0
 OBJECT_SCALE     = 5.0
 COORD_SCALE      = 1.0
@@ -356,15 +356,15 @@ def yolo3d_loss(y_true, y_pred):
     current_recall = nb_pred_box/(nb_true_box + 1e-6)
     total_recall = tf.assign_add(total_recall, current_recall) 
 
-    # loss = tf.Print(loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
-    # loss = tf.print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
-    # loss = tf.print(loss, [loss_z], message='Loss Z \t', summarize=1000)
-    # loss = tf.print(loss, [loss_wl], message='Loss WL \t', summarize=1000)
-    # loss = tf.print(loss, [loss_h], message='Loss H \t', summarize=1000)
-    # loss = tf.print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
-    # loss = tf.print(loss, [loss_class], message='Loss Class \t', summarize=1000)
-    # loss = tf.print(loss, [loss], message='Total Loss \t', summarize=1000)
-    # loss = tf.print(loss, [current_recall], message='Current Recall \t', summarize=1000)
-    # loss = tf.print(loss, [total_recall/seen], message='Average Recall \t', summarize=1000)
+    loss = tf.print(loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
+    loss = tf.print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
+    loss = tf.print(loss, [loss_z], message='Loss Z \t', summarize=1000)
+    loss = tf.print(loss, [loss_wl], message='Loss WL \t', summarize=1000)
+    loss = tf.print(loss, [loss_h], message='Loss H \t', summarize=1000)
+    loss = tf.print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
+    loss = tf.print(loss, [loss_class], message='Loss Class \t', summarize=1000)
+    loss = tf.print(loss, [loss], message='Total Loss \t', summarize=1000)
+    loss = tf.print(loss, [current_recall], message='Current Recall \t', summarize=1000)
+    loss = tf.print(loss, [total_recall/seen], message='Average Recall \t', summarize=1000)
     
     return loss

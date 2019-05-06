@@ -147,3 +147,73 @@ def parse_annotations(ann_file, img_dir):
 # train_images_dir = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/train/"
 
 # all_imgs, seen_labels = parse_annotations(train_ann, train_images_dir)
+
+class BatchGenerator(Sequence):
+    def __init__(self, images, config, shuffle=True, jitter=True, norm=None):
+        self.generator = None
+
+        self.images = images
+        self.config = config
+
+        self.shuffle = shuffle
+        self.jitter  = jitter
+        self.norm    = norm
+
+        self.anchors = [BoundBox(0, 0, config['ANCHORS'][2*i], config['ANCHORS'][2*i+1], 0, 0, 0) for i in range(int(len(config['ANCHORS'])//2))]
+
+        if shuffle: np.random.shuffle(self.images)
+    
+    def __len__(self):
+        return int(np.ceil(float(len(self.images))/self.config['BATCH_SIZE']))   
+
+    def num_classes(self):
+        return len(self.config['LABELS'])
+
+    def size(self):
+        return len(self.images)
+    
+    def load_image(self, i):
+        return cv2.imread(self.images[i]['filename'])
+    
+    def on_epoch_end(self):
+        if self.shuffle: np.random.shuffle(self.images)
+    
+    def load_annotation(self, i):
+        annots = []
+
+        for obj in self.images[i]['object']:
+            annot = [obj['xmin'], 
+                        obj['ymin'], 
+                        obj['xmax'], 
+                        obj['ymax'],
+                        obj['yaw'],
+                        obj['z'],
+                        obj['height'], 
+                        self.config['LABELS'].index(obj['name'])]
+            annots += [annot]
+
+        if len(annots) == 0: annots = [[]]
+
+        return np.array(annots)
+    
+    # def __getitem__(self, idx):
+    #     l_bound = idx*self.config['BATCH_SIZE']
+    #     r_bound = (idx+1)*self.config['BATCH_SIZE']
+
+    #     if r_bound > len(self.images):
+    #         r_bound = len(self.images)
+    #         l_bound = r_bound - self.config['BATCH_SIZE']
+        
+    #     instance_count = 0
+
+    #     # Input images
+    #     x_batch = np.zeros((r_bound - l_bound, self.config['IMAGE_H'], self.config['IMAGE_W'], 2))
+
+    #     # list of self.config[self.config['TRUE_BOX_BUFFER'] GT boxes
+    #     b_batch = np.zeros((r_bound - l_bound, 1, 1, 1, self.config['TRUE_BOX_BUFFER'], 7))
+
+    #     # Desired network output
+    #     y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
+
+    #     for train_instance in self.images[l_bound:r_bound]:
+
