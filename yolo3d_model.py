@@ -38,7 +38,7 @@ COORD_SCALE      = 1.0
 CLASS_SCALE      = 1.0
 YAW_SCALE        = 1.0
 
-BATCH_SIZE       = 16
+BATCH_SIZE       = 2
 WARM_UP_BATCHES  = 0
 TRUE_BOX_BUFFER  = 20
 
@@ -48,7 +48,7 @@ TRUE_BOX_BUFFER  = 20
 def space_to_depth_x2(x):
     return tf.space_to_depth(x, block_size=2)
 
-input_image = Input(shape=(IMAGE_H, IMAGE_W, 2)) # Originally 3
+input_image = Input(shape=(IMAGE_H, IMAGE_W, 3)) # Originally 3
 true_boxes  = Input(shape=(1, 1, 1, TRUE_BOX_BUFFER , 7)) # Originally 4
 
 def create_yolo3d_model():
@@ -356,15 +356,15 @@ def yolo3d_loss(y_true, y_pred):
     current_recall = nb_pred_box/(nb_true_box + 1e-6)
     total_recall = tf.assign_add(total_recall, current_recall) 
 
-    loss = tf.print(loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
-    loss = tf.print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
-    loss = tf.print(loss, [loss_z], message='Loss Z \t', summarize=1000)
-    loss = tf.print(loss, [loss_wl], message='Loss WL \t', summarize=1000)
-    loss = tf.print(loss, [loss_h], message='Loss H \t', summarize=1000)
-    loss = tf.print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
-    loss = tf.print(loss, [loss_class], message='Loss Class \t', summarize=1000)
-    loss = tf.print(loss, [loss], message='Total Loss \t', summarize=1000)
-    loss = tf.print(loss, [current_recall], message='Current Recall \t', summarize=1000)
-    loss = tf.print(loss, [total_recall/seen], message='Average Recall \t', summarize=1000)
+    # loss = tf.print(loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
+    # loss = tf.print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
+    # loss = tf.print(loss, [loss_z], message='Loss Z \t', summarize=1000)
+    # loss = tf.print(loss, [loss_wl], message='Loss WL \t', summarize=1000)
+    # loss = tf.print(loss, [loss_h], message='Loss H \t', summarize=1000)
+    # loss = tf.print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
+    # loss = tf.print(loss, [loss_class], message='Loss Class \t', summarize=1000)
+    # loss = tf.print(loss, [loss], message='Total Loss \t', summarize=1000)
+    # loss = tf.print(loss, [current_recall], message='Current Recall \t', summarize=1000)
+    # loss = tf.print(loss, [total_recall/seen], message='Average Recall \t', summarize=1000)
     
     return loss

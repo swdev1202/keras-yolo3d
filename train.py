@@ -7,6 +7,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import cv2
+from preprocessing import parse_annotations, BatchGenerator
 
 ###############################################
 ## Parse data and create batches
@@ -22,7 +23,7 @@ generator_config = {
     'CLASS'           : len(LABELS),
     'ANCHORS'         : ANCHORS,
     'BATCH_SIZE'      : BATCH_SIZE,
-    'TRUE_BOX_BUFFER' : 50,
+    'TRUE_BOX_BUFFER' : 20,
 }
 
 train_annot_file = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/annotations/train_ann.txt"
@@ -30,8 +31,11 @@ train_image_folder = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CM
 valid_annot_file = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/annotations/val_ann.txt"
 valid_image_folder = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/val/"
 
-train_imgs, seen_train_labels = parse_annotation(train_annot_file, train_image_folder)
-valid_imgs, seen_valid_labels = parse_annotation(valid_annot_file, valid_image_folder)
+train_imgs, seen_train_labels = parse_annotations(train_annot_file, train_image_folder)
+valid_imgs, seen_valid_labels = parse_annotations(valid_annot_file, valid_image_folder)
+
+def normalize(image):
+    return image / 255.
 
 train_batch = BatchGenerator(train_imgs, generator_config, norm=normalize)
 valid_batch = BatchGenerator(valid_imgs, generator_config, norm=normalize, jitter=False)
@@ -39,8 +43,6 @@ valid_batch = BatchGenerator(valid_imgs, generator_config, norm=normalize, jitte
 ##################################################
 ## Callbacks
 ##################################################
-def normalize(image):
-    return image / 255.
 
 early_stop = EarlyStopping(monitor='val_loss', 
                            min_delta=0.001, 
@@ -55,7 +57,7 @@ checkpoint = ModelCheckpoint('weights_coco.h5',
                              mode='min', 
                              period=1)
 
-tb_counter  = len([log for log in os.listdir(os.path.expanduser('~/logs/')) if 'lgsvl_' in log]) + 1
+tb_counter  = len([log for log in os.listdir(os.path.expanduser('~/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/repos/keras-yolo3d/logs/')) if 'lgsvl_' in log]) + 1
 tensorboard = TensorBoard(log_dir=os.path.expanduser('~/logs/') + 'lgsvl_' + '_' + str(tb_counter), 
                           histogram_freq=0, 
                           write_graph=True, 
@@ -64,6 +66,12 @@ tensorboard = TensorBoard(log_dir=os.path.expanduser('~/logs/') + 'lgsvl_' + '_'
 #####################################################
 ## Compile model and start training
 #####################################################
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+# config.gpu_options.per_process_gpu_memory_fraction = 0.2
+sess = tf.Session(config=config)
+
+K.set_session(sess)
 
 model = create_yolo3d_model()
 optimizer = SGD(lr=1e-4, decay=0.0005, momentum=0.9)
