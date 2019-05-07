@@ -216,6 +216,9 @@ def yolo3d_loss(y_true, y_pred):
     ### adjust x, y and z      
     pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
     pred_box_z = tf.sigmoid(y_pred[..., 2])
+     #---------------debugging code-----------------#
+    tf.expand_dims(pred_box_z, -1)
+    #---------------debugging code-----------------#
 
     ### adjust w, l and h
     pred_box_wl = tf.exp(y_pred[..., 3:5]) * np.reshape(ANCHORS, [1,1,1,BOX,2])
@@ -236,6 +239,9 @@ def yolo3d_loss(y_true, y_pred):
     ### adjust x, y and z
     true_box_xy = y_true[..., 0:2] # relative position to the containing cell
     true_box_z = y_true[..., 2]
+    #---------------debugging code-----------------#
+    tf.expand_dims(true_box_z, -1)
+    #---------------debugging code-----------------#
     
     ### adjust w, l and h
     true_box_wl = y_true[..., 3:5] # number of cells accross, horizontally and vertically
@@ -279,7 +285,7 @@ def yolo3d_loss(y_true, y_pred):
     # penalize the confidence of the boxes, which have IOU with some ground truth box < 0.6
     true_xy = true_boxes[..., 0:2]
     true_z = true_boxes[..., 2]
-
+    
     true_wl = true_boxes[..., 3:5]
     true_h = true_boxes[..., 5]
 
@@ -339,7 +345,7 @@ def yolo3d_loss(y_true, y_pred):
 
     # Add loss_z term
     loss_xy = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    # loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_15
+    loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_15
 
     # Need to change to wlh
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
