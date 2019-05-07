@@ -320,16 +320,16 @@ def yolo3d_loss(y_true, y_pred):
     """
     Warm-up training
     """
-    no_boxes_mask = tf.cast(coord_mask < COORD_SCALE/2., tf.float32)
-    seen = tf.assign_add(seen, 1.)
+    # no_boxes_mask = tf.cast(coord_mask < COORD_SCALE/2., tf.float32)
+    # seen = tf.assign_add(seen, 1.)
     
-    true_box_xy, true_box_wh, coord_mask = tf.cond(tf.less(seen, WARM_UP_BATCHES), 
-                          lambda: [true_box_xy + (0.5 + cell_grid) * no_boxes_mask, 
-                                   true_box_wh + tf.ones_like(true_box_wh) * np.reshape(ANCHORS, [1,1,1,BOX,2]) * no_boxes_mask, 
-                                   tf.ones_like(coord_mask)],
-                          lambda: [true_box_xy, 
-                                   true_box_wh,
-                                   coord_mask])
+    # true_box_xy, true_box_wh, coord_mask = tf.cond(tf.less(seen, WARM_UP_BATCHES), 
+    #                       lambda: [true_box_xy + (0.5 + cell_grid) * no_boxes_mask, 
+    #                                true_box_wh + tf.ones_like(true_box_wh) * np.reshape(ANCHORS, [1,1,1,BOX,2]) * no_boxes_mask, 
+    #                                tf.ones_like(coord_mask)],
+    #                       lambda: [true_box_xy, 
+    #                                true_box_wh,
+    #                                coord_mask])
 
     """
     Finalize the loss
