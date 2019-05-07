@@ -186,25 +186,22 @@ def create_yolo3d_model():
     # x = Conv2D(BOX * (7 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='conv_22')(x)
     # x = Conv2D(1024, (1,1), name='conv_22', padding='same')(x)
     x = Conv2D(BOX * (7 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='conv_23')(x)
-    print(x.shape)
+
     # output = Reshape((GRID_H, GRID_W, BOX, 4 + 1 + CLASS))(x)
     output = Reshape((GRID_H, GRID_W, BOX, 7 + 1 + CLASS))(x)  # 8 regressed terms per BOX
-    #output = x
     output = Lambda(lambda args: args[0])([output, true_boxes])
 
     model = Model([input_image, true_boxes], output)
 
-    model.summary()
     return model
 
 def yolo3d_loss(y_true, y_pred):
-    mask_shape = tf.shape(y_true)[:7] # Shape matches the 7 terms
+    mask_shape = tf.shape(y_true)[:4] # Shape matches the 7 terms
     print(mask_shape)
     
     cell_x = tf.cast(tf.reshape(tf.tile(tf.range(GRID_W), [GRID_H]), (1, GRID_H, GRID_W, 1, 1)), tf.float32)
     cell_y = tf.transpose(cell_x, (0,2,1,3,4))
     cell_grid = tf.tile(tf.concat([cell_x,cell_y], -1), [BATCH_SIZE, 1, 1, 5, 1])
-    print(cell_grid)
 
     coord_mask = tf.zeros(mask_shape)
     conf_mask  = tf.zeros(mask_shape)
