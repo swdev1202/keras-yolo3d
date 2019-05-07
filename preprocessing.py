@@ -287,6 +287,7 @@ class BatchGenerator(Sequence):
                 for obj in all_objs:
                     print(image_name + " : " + obj['name'])
                     if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin']:
+                        print(obj['xmax'], obj['xmin'], obj['ymax'], obj['ymin'])
                         cv2.rectangle(img[:,:,::-1], (obj['xmin'],obj['ymin']), (obj['xmax'],obj['ymax']), (255,0,0), 3)
                         cv2.putText(img[:,:,::-1], obj['name'], 
                                     (obj['xmin']+2, obj['ymin']+12),
