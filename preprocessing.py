@@ -285,7 +285,7 @@ class BatchGenerator(Sequence):
             else:
                 # plot image and bounding boxes for sanity check
                 for obj in all_objs:
-                    print(obj['name'])
+                    print(image_name + " : " obj['name'])
                     if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin']:
                         cv2.rectangle(img[:,:,::-1], (obj['xmin'],obj['ymin']), (obj['xmax'],obj['ymax']), (255,0,0), 3)
                         cv2.putText(img[:,:,::-1], obj['name'], 
