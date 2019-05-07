@@ -197,7 +197,7 @@ def create_yolo3d_model():
 
 def yolo3d_loss(y_true, y_pred):
     mask_shape = tf.shape(y_true)[:4] # Shape matches the 7 terms
-    print(mask_shape)
+    K.print_tensor(mask_shape)
     
     cell_x = tf.cast(tf.reshape(tf.tile(tf.range(GRID_W), [GRID_H]), (1, GRID_H, GRID_W, 1, 1)), tf.float32)
     cell_y = tf.transpose(cell_x, (0,2,1,3,4))
@@ -338,9 +338,6 @@ def yolo3d_loss(y_true, y_pred):
     nb_conf_box  = tf.reduce_sum(tf.cast(conf_mask  > 0.0, tf.float32))
     nb_class_box = tf.reduce_sum(tf.cast(class_mask > 0.0, tf.float32))
 
-    print("?")
-    tf.expand_dims(true_box_z, -1)
-    # tf.expand_dims(pred_box_z, -1)
     # Add loss_z term
     loss_xy = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy) * coord_mask) / (nb_coord_box + 1e-6) / 2.
     loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2.
