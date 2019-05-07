@@ -224,11 +224,12 @@ class BatchGenerator(Sequence):
             if img is None: print('Cannot find ', image_name)
 
             all_objs = copy.deepcopy(train_instance['object'])
+            print(all_objs.shape)
 
             true_box_index = 0
 
             for obj in all_objs:
-                if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin'] and obj['name'] in self.config['LABELS']:
+                if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin'] and obj['name'] in self.config['LABELS']: # sanity check
                     center_x = .5*(obj['xmin'] + obj['xmax'])
                     center_x = center_x / (float(self.config['IMAGE_W']) / self.config['GRID_W'])
                     center_y = .5*(obj['ymin'] + obj['ymax'])
@@ -237,11 +238,12 @@ class BatchGenerator(Sequence):
                     yaw = obj['yaw']
                     height = obj['height']
 
+                    # grid location -> GRID(x,y)
                     grid_x = int(np.floor(center_x))
                     grid_y = int(np.floor(center_y))
 
-                    if grid_x < self.config['GRID_W'] and grid_y < self.config['GRID_H']:
-                        obj_indx  = self.config['LABELS'].index(obj['name'])
+                    if grid_x < self.config['GRID_W'] and grid_y < self.config['GRID_H']: # sanity check
+                        obj_indx  = self.config['LABELS'].index(obj['name']) # get the index of a given object(name)
                         
                         center_w = (obj['xmax'] - obj['xmin']) / (float(self.config['IMAGE_W']) / self.config['GRID_W']) # unit: grid cell
                         center_l = (obj['ymax'] - obj['ymin']) / (float(self.config['IMAGE_H']) / self.config['GRID_H']) # unit: grid cell
@@ -288,7 +290,7 @@ class BatchGenerator(Sequence):
                     print(image_name + " : " + obj['name'])
                     if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin']:
                         print(obj['xmax'], obj['xmin'], obj['ymax'], obj['ymin'])
-                        cv2.rectangle(img, (obj['xmin'],obj['ymin']), (obj['xmax'],obj['ymax']), (255,0,0), 3)
+                        cv2.rectangle(img[:,:,::-1], (obj['xmin'],obj['ymin']), (obj['xmax'],obj['ymax']), (255,0,0), 3)
                         cv2.putText(img[:,:,::-1], obj['name'], 
                                     (obj['xmin']+2, obj['ymin']+12),
                                     0, 1.2e-3 * img.shape[0], 

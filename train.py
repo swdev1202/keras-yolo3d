@@ -38,8 +38,13 @@ def normalize(image):
     return image / 255.
 
 train_batch = BatchGenerator(train_imgs, generator_config, norm=None)
-valid_batch = BatchGenerator(valid_imgs, generator_config, norm=None, jitter=False)
+print(train_batch)
+# valid_batch = BatchGenerator(valid_imgs, generator_config, norm=None, jitter=False)
 
+
+
+
+'''
 ##################################################
 ## Callbacks
 ##################################################
@@ -89,3 +94,4 @@ model.fit_generator(generator        = train_batch,
                     validation_steps = len(valid_batch),
                     callbacks        = [early_stop, checkpoint, tensorboard], 
                     max_queue_size   = 3)
+'''
