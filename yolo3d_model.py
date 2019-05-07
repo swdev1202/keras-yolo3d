@@ -198,6 +198,7 @@ def create_yolo3d_model():
 
 def yolo3d_loss(y_true, y_pred):
     mask_shape = tf.shape(y_true)[:7] # Shape matches the 7 terms
+    print()
 
     cell_x = tf.cast(tf.reshape(tf.tile(tf.range(GRID_W), [GRID_H]), (1, GRID_H, GRID_W, 1, 1)), tf.float32)
     cell_y = tf.transpose(cell_x, (0,2,1,3,4))
@@ -279,12 +280,12 @@ def yolo3d_loss(y_true, y_pred):
     ### confidence mask: penelize predictors + penalize boxes with low IOU
     # penalize the confidence of the boxes, which have IOU with some ground truth box < 0.6
     true_xy = true_boxes[..., 0:2]
-    # true_z = true_boxes[..., 2]
+    true_z = true_boxes[..., 2]
 
     true_wl = true_boxes[..., 3:5]
-    # true_h = true_boxes[..., 5]
+    true_h = true_boxes[..., 5]
 
-    # true_yaw = true_boxes[..., 6]
+    true_yaw = true_boxes[..., 6]
 
     true_wl_half = true_wl / 2.
     true_mins    = true_xy - true_wl_half
@@ -340,19 +341,19 @@ def yolo3d_loss(y_true, y_pred):
 
     # Add loss_z term
     loss_xy = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    # loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
     # Need to change to wlh
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    # loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
-    # loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
     loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2.
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
     loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-    # loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
+    loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
     loss = loss_xy  + loss_wl  + loss_conf + loss_class
 
     nb_true_box = tf.reduce_sum(y_true[..., 7])
