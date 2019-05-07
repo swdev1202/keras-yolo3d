@@ -217,7 +217,7 @@ def yolo3d_loss(y_true, y_pred):
     pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
     pred_box_z = tf.sigmoid(y_pred[..., 2])
     #---------------debugging code-----------------#
-    tf.expand_dims(pred_box_z, 4)
+    # tf.expand_dims(pred_box_z, 4)
     #---------------debugging code-----------------#
 
     ### adjust w, l and h
@@ -246,7 +246,7 @@ def yolo3d_loss(y_true, y_pred):
     true_box_xy = y_true[..., 0:2] # relative position to the containing cell
     true_box_z = y_true[..., 2]
     #---------------debugging code-----------------#
-    tf.expand_dims(pred_box_z, 4)
+    # tf.expand_dims(pred_box_z, 4)
     #---------------debugging code-----------------#
     
     ### adjust w, l and h
@@ -291,7 +291,8 @@ def yolo3d_loss(y_true, y_pred):
     Determine the masks
     """
     ### coordinate mask: simply the position of the ground truth boxes (the predictors)
-    coord_mask = tf.expand_dims(y_true[..., 7], axis=-1) * COORD_SCALE
+    # coord_mask = tf.expand_dims(y_true[..., 7], axis=-1) * COORD_SCALE
+    coord_mask = y_true[..., 7] * COORD_SCALE
 
     ### confidence mask: penelize predictors + penalize boxes with low IOU
     # penalize the confidence of the boxes, which have IOU with some ground truth box < 0.6
@@ -307,8 +308,10 @@ def yolo3d_loss(y_true, y_pred):
     true_mins    = true_xy - true_wl_half
     true_maxes   = true_xy + true_wl_half
 
-    pred_xy = tf.expand_dims(pred_box_xy, 4)
-    pred_wl = tf.expand_dims(pred_box_wl, 4)
+    # pred_xy = tf.expand_dims(pred_box_xy, 4)
+    # pred_wl = tf.expand_dims(pred_box_wl, 4)
+    pred_xy = pred_box_xy
+    pred_wl = pred_box_wl
 
     pred_wl_half = pred_wl / 2.
     pred_mins    = pred_xy - pred_wl_half
