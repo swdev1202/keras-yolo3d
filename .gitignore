@@ -17,3 +17,5 @@ venv/
 ENV/
 
 annotations/
+
+*.pyc

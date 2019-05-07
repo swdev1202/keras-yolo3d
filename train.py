@@ -26,10 +26,10 @@ generator_config = {
     'TRUE_BOX_BUFFER' : TRUE_BOX_BUFFER,
 }
 
-train_annot_file = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/annotations/train_ann.txt"
-train_image_folder = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/train/"
-valid_annot_file = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/annotations/val_ann.txt"
-valid_image_folder = "/home/deepaktalwardt/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/datasets/lidar_bev_1/dataset_split/val/"
+train_annot_file = "dataset/annotations/train_ann.txt"
+train_image_folder = "dataset/train/"
+valid_annot_file = "dataset/annotations/val_ann.txt"
+valid_image_folder = "dataset/val/"
 
 train_imgs, seen_train_labels = parse_annotations(train_annot_file, train_image_folder)
 valid_imgs, seen_valid_labels = parse_annotations(valid_annot_file, valid_image_folder)
@@ -57,7 +57,7 @@ checkpoint = ModelCheckpoint('weights_coco.h5',
                              mode='min', 
                              period=1)
 
-tb_counter  = len([log for log in os.listdir(os.path.expanduser('~/Dropbox/SJSU/Semesters/Spring 2019/CMPE 297/repos/keras-yolo3d/logs/')) if 'lgsvl_' in log]) + 1
+tb_counter  = len([log for log in os.listdir(os.path.expanduser('logs/')) if 'lgsvl_' in log]) + 1
 tensorboard = TensorBoard(log_dir=os.path.expanduser('~/logs/') + 'lgsvl_' + '_' + str(tb_counter), 
                           histogram_freq=0, 
                           write_graph=True, 

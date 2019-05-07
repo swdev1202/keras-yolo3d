@@ -71,8 +71,8 @@ def create_yolo3d_model():
     x = BatchNormalization(name='norm_3')(x)
     x = LeakyReLU(alpha=0.1)(x)
 
-    # Layer 4
-    x = Conv2D(64, (1,1), strides=(1,1), padding='same', name='conv_4', use_bias=False)(x)
+    # Layer 4 - (3,3)? // written as (1,1)?
+    x = Conv2D(64, (3,3), strides=(1,1), padding='same', name='conv_4', use_bias=False)(x)
     x = BatchNormalization(name='norm_4')(x)
     x = LeakyReLU(alpha=0.1)(x)
 
@@ -89,8 +89,8 @@ def create_yolo3d_model():
     x = BatchNormalization(name='norm_6')(x)
     x = LeakyReLU(alpha=0.1)(x)
 
-    # Layer 7
-    x = Conv2D(128, (1,1), strides=(1,1), padding='same', name='conv_7', use_bias=False)(x)
+    # Layer 7 - (3,3)? // written as (1,1)?
+    x = Conv2D(128, (3,3), strides=(1,1), padding='same', name='conv_7', use_bias=False)(x)
     x = BatchNormalization(name='norm_7')(x)
     x = LeakyReLU(alpha=0.1)(x)
 
@@ -299,7 +299,7 @@ def yolo3d_loss(y_true, y_pred):
 
     intersect_mins  = tf.maximum(pred_mins,  true_mins)
     intersect_maxes = tf.minimum(pred_maxes, true_maxes)
-    intersect_wl    = tf.maximum(intersect_maxes - intersect_mins, 0.)
+    intersect_wl    = tf.maximum(intersect_maxes - intersect_mins, 0.) 
     intersect_areas = intersect_wl[..., 0] * intersect_wl[..., 1]
 
     true_areas = true_wl[..., 0] * true_wl[..., 1]
