@@ -284,22 +284,20 @@ class BatchGenerator(Sequence):
             else:
                 # plot image and bounding boxes for sanity check
                 for obj in all_objs:
+                    print("here")
                     if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin']:
                         cv2.rectangle(img[:,:,::-1], (obj['xmin'],obj['ymin']), (obj['xmax'],obj['ymax']), (255,0,0), 3)
                         cv2.putText(img[:,:,::-1], obj['name'], 
                                     (obj['xmin']+2, obj['ymin']+12), 
                                     0, 1.2e-3 * img.shape[0], 
                                     (0,255,0), 2)
+                        cv2.imwrite('temp.jpg', img)
                         
                 x_batch[instance_count] = img
             
             # increase instance counter in current batch
             instance_count += 1
+            print(instance_count)
 
         print('new batch created', idx)
-        print(x_batch[0][0].shape)
-        print(b_batch.shape)
-        print(y_batch.shape)
-        print(y_batch[0][0].shape)
-
         return [x_batch, b_batch], y_batch
