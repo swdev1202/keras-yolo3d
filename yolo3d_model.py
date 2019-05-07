@@ -196,7 +196,7 @@ def create_yolo3d_model():
     return model
 
 def yolo3d_loss(y_true, y_pred):
-    mask_shape = tf.shape(y_true)[:4] # Shape matches the 7 terms
+    mask_shape = tf.shape(y_true)[:5]
     
     cell_x = tf.cast(tf.reshape(tf.tile(tf.range(GRID_W), [GRID_H]), (1, GRID_H, GRID_W, 1, 1)), tf.float32)
     cell_y = tf.transpose(cell_x, (0,2,1,3,4))
@@ -217,7 +217,7 @@ def yolo3d_loss(y_true, y_pred):
     pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
     pred_box_z = tf.sigmoid(y_pred[..., 2])
     #---------------debugging code-----------------#
-    tf.squeeze(pred_box_z)
+    # tf.squeeze(pred_box_z)
     #---------------debugging code-----------------#
 
     ### adjust w, l and h
@@ -246,7 +246,7 @@ def yolo3d_loss(y_true, y_pred):
     true_box_xy = y_true[..., 0:2] # relative position to the containing cell
     true_box_z = y_true[..., 2]
     #---------------debugging code-----------------#
-    tf.squeeze(pred_box_z)
+    # tf.squeeze(pred_box_z)
     #---------------debugging code-----------------#
     
     ### adjust w, l and h
