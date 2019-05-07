@@ -216,16 +216,22 @@ def yolo3d_loss(y_true, y_pred):
     ### adjust x, y and z      
     pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
     pred_box_z = tf.sigmoid(y_pred[..., 2])
-     #---------------debugging code-----------------#
+    #---------------debugging code-----------------#
     tf.expand_dims(pred_box_z, -1)
     #---------------debugging code-----------------#
 
     ### adjust w, l and h
     pred_box_wl = tf.exp(y_pred[..., 3:5]) * np.reshape(ANCHORS, [1,1,1,BOX,2])
     pred_box_h = tf.exp(y_pred[..., 5])
+    #---------------debugging code-----------------#
+    tf.expand_dims(pred_box_h, -1)
+    #---------------debugging code-----------------#
 
     ### adjust yaw
     pred_box_yaw = tf.sigmoid(y_pred[..., 6])
+    #---------------debugging code-----------------#
+    tf.expand_dims(pred_box_yaw, -1)
+    #---------------debugging code-----------------#
 
     ### adjust confidence
     pred_box_conf = tf.sigmoid(y_pred[..., 7])
@@ -246,9 +252,15 @@ def yolo3d_loss(y_true, y_pred):
     ### adjust w, l and h
     true_box_wl = y_true[..., 3:5] # number of cells accross, horizontally and vertically
     true_box_h = y_true[..., 5]
+    #---------------debugging code-----------------#
+    tf.expand_dims(true_box_h, -1)
+    #---------------debugging code-----------------#
 
     ### adjust yaw
     true_box_yaw = y_true[..., 6]
+    #---------------debugging code-----------------#
+    tf.expand_dims(true_box_yaw, -1)
+    #---------------debugging code-----------------#
 
     ### adjust confidence(IOU)
     true_wl_half = true_box_wl / 2.
@@ -349,16 +361,16 @@ def yolo3d_loss(y_true, y_pred):
 
     # Need to change to wlh
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    #loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_17
+    loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_17
 
-    #loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
     loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2. #problematic? lambda_1_loss/mul_18
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
     loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-    # loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
-    loss = loss_xy  + loss_wl + loss_conf + loss_class
+    loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
+    # loss = loss_xy  + loss_wl + loss_conf + loss_class
 
     nb_true_box = tf.reduce_sum(y_true[..., 7])
     nb_pred_box = tf.reduce_sum(tf.cast(true_box_conf > 0.5, tf.float32) * tf.cast(pred_box_conf > 0.3, tf.float32))
