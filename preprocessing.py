@@ -269,8 +269,8 @@ class BatchGenerator(Sequence):
                         
                         # assign ground truth x, y, z, yaw, w, l, h, confidence and class probs to y_batch
                         y_batch[instance_count, grid_y, grid_x, best_anchor, 0:7] = box
-                        y_batch[instance_count, grid_y, grid_x, best_anchor, 8  ] = 1.
-                        y_batch[instance_count, grid_y, grid_x, best_anchor, 9+obj_indx] = 1
+                        y_batch[instance_count, grid_y, grid_x, best_anchor, 7  ] = 1.
+                        y_batch[instance_count, grid_y, grid_x, best_anchor, 8+obj_indx] = 1
 
                         # assign the true box to b_batch
                         b_batch[instance_count, 0, 0, 0, true_box_index] = box

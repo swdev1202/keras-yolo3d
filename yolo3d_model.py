@@ -128,7 +128,7 @@ def create_yolo3d_model():
 
     # skip_connection = x # Skipped in YOLO3D
 
-    x = MaxPooling2D(pool_size=(2, 2))(x)
+    # x = MaxPooling2D(pool_size=(2, 2))(x)
 
     # Layer 14
     x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_14', use_bias=False)(x)
@@ -186,14 +186,15 @@ def create_yolo3d_model():
     # x = Conv2D(BOX * (7 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='conv_22')(x)
     # x = Conv2D(1024, (1,1), name='conv_22', padding='same')(x)
     x = Conv2D(BOX * (7 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='conv_23')(x)
-    
+    print(x.shape)
     # output = Reshape((GRID_H, GRID_W, BOX, 4 + 1 + CLASS))(x)
     output = Reshape((GRID_H, GRID_W, BOX, 7 + 1 + CLASS))(x)  # 8 regressed terms per BOX
-
+    #output = x
     output = Lambda(lambda args: args[0])([output, true_boxes])
 
     model = Model([input_image, true_boxes], output)
 
+    model.summary()
     return model
 
 def yolo3d_loss(y_true, y_pred):
