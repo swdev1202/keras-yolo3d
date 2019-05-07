@@ -291,7 +291,9 @@ class BatchGenerator(Sequence):
                                     (obj['xmin']+2, obj['ymin']+12), 
                                     0, 1.2e-3 * img.shape[0], 
                                     (0,255,0), 2)
-                        cv2.imwrite('temp.jpg', img)
+                        # debug code
+                        fin_img = np.concatenate((img, np.zeros([608,608,1], dtype=np.uint8)), axis=2)
+                        cv2.imwrite('temp.jpg', fin_img)
                         
                 x_batch[instance_count] = img
             
