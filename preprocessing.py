@@ -211,7 +211,7 @@ class BatchGenerator(Sequence):
         x_batch = np.zeros((r_bound - l_bound, self.config['IMAGE_H'], self.config['IMAGE_W'], 2))
 
         # list of self.config[self.config['TRUE_BOX_BUFFER'] GT boxes
-        b_batch = np.zeros((r_bound - l_bound, 1, 1, 1, self.config['TRUE_BOX_BUFFER'], 7))
+        b_batch = np.zeros((r_bound - l_bound, 1, 1, 1, self.config['TRUE_BOX_BUFFER'], 7)) #??
 
         # Desired network output
         y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
@@ -270,7 +270,7 @@ class BatchGenerator(Sequence):
                         # assign ground truth x, y, z, yaw, w, l, h, confidence and class probs to y_batch
                         y_batch[instance_count, grid_y, grid_x, best_anchor, 0:7] = box
                         y_batch[instance_count, grid_y, grid_x, best_anchor, 8  ] = 1.
-                        y_batch[instance_count, grid_y, grid_x, best_anchor, 8+obj_indx] = 1
+                        y_batch[instance_count, grid_y, grid_x, best_anchor, 9+obj_indx] = 1
 
                         # assign the true box to b_batch
                         b_batch[instance_count, 0, 0, 0, true_box_index] = box
@@ -294,7 +294,7 @@ class BatchGenerator(Sequence):
                 x_batch[instance_count] = img
             
             # increase instance counter in current batch
-            instance_count += 1  
+            instance_count += 1
 
         print('new batch created', idx)
 

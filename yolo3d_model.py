@@ -24,14 +24,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 LABELS = ['scooter', 'hoverboard', 'skateboard', 'segway', 'onewheel']
 
 IMAGE_H, IMAGE_W = 608, 608
-GRID_H,  GRID_W  = 37 , 37
+GRID_H,  GRID_W  = 38 , 38 #??
 BOX              = 5
 CLASS            = len(LABELS)
 CLASS_WEIGHTS    = np.ones(CLASS, dtype='float32')
 OBJ_THRESHOLD    = 0.3 #0.5
 NMS_THRESHOLD    = 0.3 #0.45
 # ANCHORS          = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
-ANCHORS          = [39//2, 52//2, 18//2, 27//2, 27//2, 52//2, 29//2, 29//2, 24//2, 32//2]
+ANCHORS          = np.multiply([39, 52, 18, 27, 27, 52, 29, 29, 24, 32], (GRID_H/IMAGE_H)).tolist()
 NO_OBJECT_SCALE  = 1.0
 OBJECT_SCALE     = 5.0
 COORD_SCALE      = 1.0
@@ -45,8 +45,8 @@ TRUE_BOX_BUFFER  = 20
 #################################################
 ## Construct Network
 #################################################
-def space_to_depth_x2(x):
-    return tf.space_to_depth(x, block_size=2)
+# def space_to_depth_x2(x):
+#     return tf.space_to_depth(x, block_size=2)
 
 input_image = Input(shape=(IMAGE_H, IMAGE_W, 2)) # Originally 3
 true_boxes  = Input(shape=(1, 1, 1, TRUE_BOX_BUFFER , 7)) # Originally 4
@@ -82,7 +82,7 @@ def create_yolo3d_model():
     x = LeakyReLU(alpha=0.1)(x)
 
     # x = MaxPooling2D(pool_size=(2, 2), strides=(1, 1))(x)
-    x = MaxPooling2D(pool_size=(2, 2), strides=(1, 1))(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
 
     # Layer 6
     x = Conv2D(256, (3,3), strides=(1,1), padding='same', name='conv_6', use_bias=False)(x)
@@ -198,11 +198,12 @@ def create_yolo3d_model():
 
 def yolo3d_loss(y_true, y_pred):
     mask_shape = tf.shape(y_true)[:7] # Shape matches the 7 terms
-    print()
-
+    print(mask_shape)
+    
     cell_x = tf.cast(tf.reshape(tf.tile(tf.range(GRID_W), [GRID_H]), (1, GRID_H, GRID_W, 1, 1)), tf.float32)
     cell_y = tf.transpose(cell_x, (0,2,1,3,4))
     cell_grid = tf.tile(tf.concat([cell_x,cell_y], -1), [BATCH_SIZE, 1, 1, 5, 1])
+    print(cell_grid)
 
     coord_mask = tf.zeros(mask_shape)
     conf_mask  = tf.zeros(mask_shape)
