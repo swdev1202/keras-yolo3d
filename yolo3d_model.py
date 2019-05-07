@@ -340,7 +340,7 @@ def yolo3d_loss(y_true, y_pred):
 
     print("?")
     tf.expand_dims(true_box_z, -1)
-    tf.expand_dims(pred_box_z, -1)
+    # tf.expand_dims(pred_box_z, -1)
     # Add loss_z term
     loss_xy = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy) * coord_mask) / (nb_coord_box + 1e-6) / 2.
     loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2.
