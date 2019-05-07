@@ -297,5 +297,6 @@ class BatchGenerator(Sequence):
             instance_count += 1
 
         print('new batch created', idx)
+        print(x_batch, b_batch, y_batch)
 
         return [x_batch, b_batch], y_batch
