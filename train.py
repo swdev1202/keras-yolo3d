@@ -90,5 +90,5 @@ model.fit_generator(generator        = train_batch,
                     verbose          = 1,
                     validation_data  = valid_batch,
                     validation_steps = len(valid_batch),
-                    callbacks        = checkpoint, tensorboard], 
+                    callbacks        = [early_stop, checkpoint, tensorboard], 
                     max_queue_size   = 3)

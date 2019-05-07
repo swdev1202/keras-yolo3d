@@ -224,8 +224,7 @@ class BatchGenerator(Sequence):
             if img is None: print('Cannot find ', image_name)
 
             all_objs = copy.deepcopy(train_instance['object'])
-            print(all_objs.shape)
-
+            
             true_box_index = 0
 
             for obj in all_objs:
