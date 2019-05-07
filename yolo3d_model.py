@@ -343,16 +343,16 @@ def yolo3d_loss(y_true, y_pred):
 
     # Need to change to wlh
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2.
+    #loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
     #loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2.
 
-    #loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2. #problematic? lambda_1_loss/mul_18
+    loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2. #problematic? lambda_1_loss/mul_18
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
     loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
     # loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
-    loss = loss_xy + loss_z + loss_wl + loss_h + loss_class
+    loss = loss_xy + loss_z + loss_wl + loss_conf + loss_class
 
     nb_true_box = tf.reduce_sum(y_true[..., 7])
     nb_pred_box = tf.reduce_sum(tf.cast(true_box_conf > 0.5, tf.float32) * tf.cast(pred_box_conf > 0.3, tf.float32))
