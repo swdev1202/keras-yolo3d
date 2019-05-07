@@ -53,7 +53,7 @@ early_stop = EarlyStopping(monitor='val_loss',
                            mode='min', 
                            verbose=1)
 
-checkpoint = ModelCheckpoint('weights_coco.h5', 
+checkpoint = ModelCheckpoint('lgsvl_yolo3d.h5', 
                              monitor='val_loss', 
                              verbose=1, 
                              save_best_only=True, 

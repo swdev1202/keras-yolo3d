@@ -201,7 +201,7 @@ def yolo3d_loss(y_true, y_pred):
     
     cell_x = tf.cast(tf.reshape(tf.tile(tf.range(GRID_W), [GRID_H]), (1, GRID_H, GRID_W, 1, 1)), tf.float32)
     cell_y = tf.transpose(cell_x, (0,2,1,3,4))
-    cell_grid = tf.tile(tf.concat([cell_x,cell_y], -1), [BATCH_SIZE, 1, 1, 5, 1])
+    cell_grid = tf.tile(tf.concat([cell_x,cell_y], -1), [BATCH_SIZE, 1, 1, BOX, 1])
 
     coord_mask = tf.zeros(mask_shape)
     conf_mask  = tf.zeros(mask_shape)
@@ -245,7 +245,7 @@ def yolo3d_loss(y_true, y_pred):
     ### adjust yaw
     true_box_yaw = y_true[..., 6]
 
-    ### adjust confidence
+    ### adjust confidence(IOU)
     true_wl_half = true_box_wl / 2.
     true_mins    = true_box_xy - true_wl_half
     true_maxes   = true_box_xy + true_wl_half
@@ -257,7 +257,7 @@ def yolo3d_loss(y_true, y_pred):
     intersect_mins  = tf.maximum(pred_mins,  true_mins)
     intersect_maxes = tf.minimum(pred_maxes, true_maxes)
     intersect_wl    = tf.maximum(intersect_maxes - intersect_mins, 0.)
-    intersect_areas = intersect_wl[..., 0] * intersect_wl[..., 1]
+    intersect_areas = intersect_wl[..., 0] * intersect_wl[..., 1] # overlapped area
 
     true_areas = true_box_wl[..., 0] * true_box_wl[..., 1]
     pred_areas = pred_box_wl[..., 0] * pred_box_wl[..., 1]
@@ -320,16 +320,16 @@ def yolo3d_loss(y_true, y_pred):
     """
     Warm-up training
     """
-    # no_boxes_mask = tf.to_float(coord_mask < COORD_SCALE/2.)
-    # seen = tf.assign_add(seen, 1.)
+    no_boxes_mask = tf.cast(coord_mask < COORD_SCALE/2., tf.float32)
+    seen = tf.assign_add(seen, 1.)
     
-    # true_box_xy, true_box_wh, coord_mask = tf.cond(tf.less(seen, WARM_UP_BATCHES), 
-    #                       lambda: [true_box_xy + (0.5 + cell_grid) * no_boxes_mask, 
-    #                                true_box_wh + tf.ones_like(true_box_wh) * np.reshape(ANCHORS, [1,1,1,BOX,2]) * no_boxes_mask, 
-    #                                tf.ones_like(coord_mask)],
-    #                       lambda: [true_box_xy, 
-    #                                true_box_wh,
-    #                                coord_mask])
+    true_box_xy, true_box_wh, coord_mask = tf.cond(tf.less(seen, WARM_UP_BATCHES), 
+                          lambda: [true_box_xy + (0.5 + cell_grid) * no_boxes_mask, 
+                                   true_box_wh + tf.ones_like(true_box_wh) * np.reshape(ANCHORS, [1,1,1,BOX,2]) * no_boxes_mask, 
+                                   tf.ones_like(coord_mask)],
+                          lambda: [true_box_xy, 
+                                   true_box_wh,
+                                   coord_mask])
 
     """
     Finalize the loss
@@ -353,7 +353,7 @@ def yolo3d_loss(y_true, y_pred):
     loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
     loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
-    loss = loss_xy  + loss_wl  + loss_conf + loss_class
+    # loss = loss_xy  + loss_wl  + loss_conf + loss_class
 
     nb_true_box = tf.reduce_sum(y_true[..., 7])
     nb_pred_box = tf.reduce_sum(tf.cast(true_box_conf > 0.5, tf.float32) * tf.cast(pred_box_conf > 0.3, tf.float32))

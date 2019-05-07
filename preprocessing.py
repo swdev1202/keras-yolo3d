@@ -245,7 +245,7 @@ class BatchGenerator(Sequence):
                         center_w = (obj['xmax'] - obj['xmin']) / (float(self.config['IMAGE_W']) / self.config['GRID_W']) # unit: grid cell
                         center_l = (obj['ymax'] - obj['ymin']) / (float(self.config['IMAGE_H']) / self.config['GRID_H']) # unit: grid cell
                         
-                        box = [center_x, center_y, center_z, yaw, center_w, center_l, height]
+                        box = [center_x, center_y, center_z, center_w, center_l, height, yaw]
 
                          # find the anchor that best predicts this box
                         best_anchor = -1
