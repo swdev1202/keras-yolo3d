@@ -1,4 +1,4 @@
-# keras-yolo3d
+# keras-yolo3d (IN PROGRESS - CANNOT BE USED CURRENTLY)
 keras implementation of [YOLO3D](https://arxiv.org/pdf/1808.02350.pdf) based on YOLOv2 architecture.
 
 ## Introduction
