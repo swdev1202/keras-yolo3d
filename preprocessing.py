@@ -219,9 +219,11 @@ class BatchGenerator(Sequence):
         # Desired network output
         y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
         
+        print("*** DEBUG ***")
         print("idx: " + str(idx))
-        print("BATCH_SIZE" + str(self.config['BATCH_SIZE']))
+        print("BATCH_SIZE: " + str(self.config['BATCH_SIZE']))
         print("Bounds: " + str(l_bound) + ", " + str(r_bound))
+
         count = 0
 
         for train_instance in self.images[l_bound:r_bound]:
@@ -312,7 +314,8 @@ class BatchGenerator(Sequence):
             
             # increase instance counter in current batch
             instance_count += 1
-            print(instance_count)
+            # print(instance_count)
 
+        print("*************")
         print('new batch created', idx)
         return [x_batch, b_batch], y_batch
