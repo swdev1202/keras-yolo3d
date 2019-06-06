@@ -390,7 +390,7 @@ class MyGenerator(Sequence):
         # Desired network output
         y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
         
-        print("*** DEBUG ***")
+        print("\n*** DEBUG ***")
         print("[" + self.name + "]" + " idx: " + str(idx))
         print("[" + self.name + "]" + "BATCH_SIZE: " + str(self.config['BATCH_SIZE']))
         print("[" + self.name + "]" + "Bounds: " + str(l_bound) + ", " + str(r_bound))
