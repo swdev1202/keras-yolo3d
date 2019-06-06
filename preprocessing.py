@@ -140,7 +140,7 @@ def parse_annotations(ann_file, img_dir):
 
                 img['object'] += [obj_dict]
 
-        all_imgs += [img]
+            all_imgs += [img]
     return all_imgs, seen_labels
 
 
