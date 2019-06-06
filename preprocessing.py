@@ -216,10 +216,14 @@ class BatchGenerator(Sequence):
         # Desired network output
         y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
 
+        print("Bounds: " + str(l_bound) + ", " + str(r_bound))
+        count = 0
+
         for train_instance in self.images[l_bound:r_bound]:
             image_name = train_instance['filename']
-            img = cv2.imread(image_name)[:,:,0:2]
-            print(image_name)
+            count += 1
+
+            print("File " + str(count) + ": " + image_name)
 
             if img is None: print('Cannot find ', image_name)
 
@@ -295,8 +299,8 @@ class BatchGenerator(Sequence):
                                     0, 1.2e-3 * img.shape[0], 
                                     (0,255,0), 2)
                         # debug code
-                        fin_img = np.concatenate((img, np.zeros([608,608,1], dtype=np.uint8)), axis=2)
-                        cv2.imwrite(str(obj['name'])+'.jpg', fin_img)
+                        # fin_img = np.concatenate((img, np.zeros([608,608,1], dtype=np.uint8)), axis=2)
+                        # cv2.imwrite(str(obj['name'])+'.jpg', fin_img)
                         
                 x_batch[instance_count] = img
             
