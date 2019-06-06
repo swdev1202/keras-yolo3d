@@ -198,6 +198,9 @@ class BatchGenerator(Sequence):
         return np.array(annots)
     
     def __getitem__(self, idx):
+
+
+
         l_bound = idx*self.config['BATCH_SIZE']
         r_bound = (idx+1)*self.config['BATCH_SIZE']
 
@@ -215,7 +218,9 @@ class BatchGenerator(Sequence):
 
         # Desired network output
         y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
-
+        
+        print("idx: " + str(idx))
+        print("BATCH_SIZE" + self.config['BATCH_SIZE'])
         print("Bounds: " + str(l_bound) + ", " + str(r_bound))
         count = 0
 
@@ -224,6 +229,7 @@ class BatchGenerator(Sequence):
             count += 1
 
             print("File " + str(count) + ": " + image_name)
+            img = cv2.imread(image_name)[:,:,0:2]
 
             if img is None: print('Cannot find ', image_name)
 
