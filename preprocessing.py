@@ -322,12 +322,13 @@ class BatchGenerator(Sequence):
 
 
 class MyGenerator(Sequence):
-    def __init__(self, images, config, name, shuffle=True):
+    def __init__(self, images, config, name, shuffle=True, norm=None):
         
         self.images = images
         self.config = config
         self.shuffle = shuffle
         self.name = name
+        self.norm = norm
         self.anchors = [BoundBox(0, 0, config['ANCHORS'][2*i], config['ANCHORS'][2*i+1], 0, 0, 0) for i in range(int(len(config['ANCHORS'])//2))]
         
         self.on_epoch_end()
