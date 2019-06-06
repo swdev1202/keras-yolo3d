@@ -331,7 +331,7 @@ class MyGenerator(Sequence):
         self.norm = norm
         self.anchors = [BoundBox(0, 0, config['ANCHORS'][2*i], config['ANCHORS'][2*i+1], 0, 0, 0) for i in range(int(len(config['ANCHORS'])//2))]
         
-        self.on_epoch_end()
+        # self.on_epoch_end()
     
     def __len__(self):
         return int(np.ceil(float(len(self.images))/self.config['BATCH_SIZE']))
