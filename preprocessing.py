@@ -201,8 +201,6 @@ class BatchGenerator(Sequence):
     
     def __getitem__(self, idx):
 
-
-
         l_bound = idx*self.config['BATCH_SIZE']
         r_bound = (idx+1)*self.config['BATCH_SIZE']
 
@@ -239,6 +237,174 @@ class BatchGenerator(Sequence):
 
             all_objs = copy.deepcopy(train_instance['object'])
             
+            true_box_index = 0
+
+            for obj in all_objs:
+                if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin'] and obj['name'] in self.config['LABELS']: # sanity check
+                    center_x = .5*(obj['xmin'] + obj['xmax'])
+                    center_x = center_x / (float(self.config['IMAGE_W']) / self.config['GRID_W'])
+                    center_y = .5*(obj['ymin'] + obj['ymax'])
+                    center_y = center_y / (float(self.config['IMAGE_H']) / self.config['GRID_H'])
+                    center_z = obj['z']
+                    yaw = obj['yaw']
+                    height = obj['height']
+
+                    # grid location -> GRID(x,y)
+                    grid_x = int(np.floor(center_x))
+                    grid_y = int(np.floor(center_y))
+
+                    if grid_x < self.config['GRID_W'] and grid_y < self.config['GRID_H']: # sanity check
+                        obj_indx  = self.config['LABELS'].index(obj['name']) # get the index of a given object(name)
+                        
+                        center_w = (obj['xmax'] - obj['xmin']) / (float(self.config['IMAGE_W']) / self.config['GRID_W']) # unit: grid cell
+                        center_l = (obj['ymax'] - obj['ymin']) / (float(self.config['IMAGE_H']) / self.config['GRID_H']) # unit: grid cell
+                        
+                        box = [center_x, center_y, center_z, center_w, center_l, height, yaw]
+
+                         # find the anchor that best predicts this box
+                        best_anchor = -1
+                        max_iou     = -1
+                        
+                        shifted_box = BoundBox(0, 
+                                               0,
+                                               0,
+                                               center_w,                                                
+                                               center_l,
+                                               0,
+                                               0)
+                        
+                        for i in range(len(self.anchors)):
+                            anchor = self.anchors[i]
+                            iou    = bbox_iou(shifted_box, anchor)
+                            
+                            if max_iou < iou:
+                                best_anchor = i
+                                max_iou     = iou
+                        
+                        # assign ground truth x, y, z, yaw, w, l, h, confidence and class probs to y_batch
+                        y_batch[instance_count, grid_y, grid_x, best_anchor, 0:7] = box
+                        y_batch[instance_count, grid_y, grid_x, best_anchor, 7  ] = 1.
+                        y_batch[instance_count, grid_y, grid_x, best_anchor, 8+obj_indx] = 1
+
+                        # assign the true box to b_batch
+                        b_batch[instance_count, 0, 0, 0, true_box_index] = box
+
+                        true_box_index += 1
+                        true_box_index = true_box_index % self.config['TRUE_BOX_BUFFER']
+            
+            # assign input image to x_batch
+            if self.norm != None: 
+                x_batch[instance_count] = self.norm(img)
+            else:
+                # plot image and bounding boxes for sanity check
+                for obj in all_objs:
+                    print(image_name + " : " + obj['name'])
+                    if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin']:
+                        print(obj['xmax'], obj['xmin'], obj['ymax'], obj['ymin'])
+                        cv2.rectangle(img[:,:,::-1], (obj['xmin'],obj['ymin']), (obj['xmax'],obj['ymax']), (255,0,0), 3)
+                        cv2.putText(img[:,:,::-1], obj['name'], 
+                                    (obj['xmin']+2, obj['ymin']+12),
+                                    0, 1.2e-3 * img.shape[0], 
+                                    (0,255,0), 2)
+                        # debug code
+                        # fin_img = np.concatenate((img, np.zeros([608,608,1], dtype=np.uint8)), axis=2)
+                        # cv2.imwrite(str(obj['name'])+'.jpg', fin_img)
+                        
+                x_batch[instance_count] = img
+            
+            # increase instance counter in current batch
+            instance_count += 1
+            # print(instance_count)
+
+        print("*************")
+        print('new batch created', idx)
+        return [x_batch, b_batch], y_batch
+
+
+class MyGenerator(Sequence):
+    def __init__(self, images, config, name, shuffle=True):
+        
+        self.images = images
+        self.config = config
+        self.shuffle = shuffle
+        self.name = name
+        self.anchors = [BoundBox(0, 0, config['ANCHORS'][2*i], config['ANCHORS'][2*i+1], 0, 0, 0) for i in range(int(len(config['ANCHORS'])//2))]
+        
+        self.on_epoch_end()
+    
+    def __len__(self):
+        return int(np.ceil(float(len(self.images))/self.config['BATCH_SIZE']))
+    
+    def num_classes(self):
+        return len(self.config['LABELS'])
+    
+    def size(self):
+        return len(self.images)
+    
+    def load_image(self, i):
+        return cv2.imread(self.images[i]['filename'])[:,:,0:2]
+    
+    def on_epoch_end(self):
+        self.indices = np.arange(len(self.images))
+        if self.shuffle: np.random.shuffle(self.images)
+    
+    def load_annotation(self, i):
+        annots = []
+
+        for obj in self.images[i]['object']:
+            annot = [obj['xmin'], 
+                        obj['ymin'], 
+                        obj['xmax'], 
+                        obj['ymax'],
+                        obj['yaw'],
+                        obj['z'],
+                        obj['height'], 
+                        self.config['LABELS'].index(obj['name'])]
+            annots += [annot]
+
+        if len(annots) == 0: annots = [[]]
+
+        return np.array(annots)
+    
+    def __getitem__(self, idx):
+
+        l_bound = idx*self.config['BATCH_SIZE']
+        r_bound = (idx+1)*self.config['BATCH_SIZE']
+
+        if r_bound > len(self.images):
+            r_bound = len(self.images)
+            l_bound = r_bound - self.config['BATCH_SIZE']
+
+        indices = self.indices[l_bound:r_bound]
+        images_batch = [self.images[k] for k in indices]
+
+        instance_count = 0
+
+        # Input images
+        x_batch = np.zeros((r_bound - l_bound, self.config['IMAGE_H'], self.config['IMAGE_W'], 2))
+
+        # list of self.config[self.config['TRUE_BOX_BUFFER'] GT boxes
+        b_batch = np.zeros((r_bound - l_bound, 1, 1, 1, self.config['TRUE_BOX_BUFFER'], 7)) #??
+
+        # Desired network output
+        y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
+        
+        print("*** DEBUG ***")
+        print("[" + self.name + "]" + " idx: " + str(idx))
+        print("[" + self.name + "]" + "BATCH_SIZE: " + str(self.config['BATCH_SIZE']))
+        print("[" + self.name + "]" + "Bounds: " + str(l_bound) + ", " + str(r_bound))
+
+        count = 0
+
+        for train_instance in images_batch:
+            count += 1
+            image_name = train_instance['filename']
+            print("File " + str(count) + ": " + image_name)
+
+            img = cv2.imread(image_name)[:,:,0:2]
+            if img is None: print('Cannot find ', image_name)
+            
+            all_objs = copy.deepcopy(train_instance['object'])
             true_box_index = 0
 
             for obj in all_objs:
