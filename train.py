@@ -7,7 +7,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import cv2
-from preprocessing import parse_annotations, BatchGenerator
+from preprocessing import parse_annotations, BatchGenerator, MyGenerator
 
 ###############################################
 ## Parse data and create batches
@@ -37,8 +37,8 @@ valid_imgs, seen_valid_labels = parse_annotations(valid_annot_file, valid_image_
 def normalize(image):
     return image / 255.
 
-train_batch = BatchGenerator(train_imgs, generator_config, "training_batch", norm=None)
-valid_batch = BatchGenerator(valid_imgs, generator_config, "validation_batch", norm=None, jitter=False)
+train_batch = MyGenerator(train_imgs, generator_config, "training_batch", norm=None)
+valid_batch = MyGenerator(valid_imgs, generator_config, "validation_batch", norm=None, jitter=False)
 
 
 ##################################################
