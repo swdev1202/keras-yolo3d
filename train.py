@@ -37,8 +37,8 @@ valid_imgs, seen_valid_labels = parse_annotations(valid_annot_file, valid_image_
 def normalize(image):
     return image / 255.
 
-train_batch = MyGenerator(train_imgs, generator_config, "training_batch", norm=None)
-valid_batch = MyGenerator(valid_imgs, generator_config, "validation_batch", norm=None, jitter=False)
+train_batch = MyGenerator(train_imgs, generator_config, "training_batch")
+valid_batch = MyGenerator(valid_imgs, generator_config, "validation_batch")
 
 
 ##################################################
