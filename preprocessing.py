@@ -150,7 +150,7 @@ def parse_annotations(ann_file, img_dir):
 # all_imgs, seen_labels = parse_annotations(train_ann, train_images_dir)
 
 class BatchGenerator(Sequence):
-    def __init__(self, images, config, shuffle=True, jitter=True, norm=None):
+    def __init__(self, images, config, name, shuffle=True, jitter=True, norm=None):
         self.generator = None
 
         self.images = images
@@ -159,6 +159,8 @@ class BatchGenerator(Sequence):
         self.shuffle = shuffle
         self.jitter  = jitter
         self.norm    = norm
+
+        self.name = name
 
         self.anchors = [BoundBox(0, 0, config['ANCHORS'][2*i], config['ANCHORS'][2*i+1], 0, 0, 0) for i in range(int(len(config['ANCHORS'])//2))]
 
@@ -220,9 +222,9 @@ class BatchGenerator(Sequence):
         y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
         
         print("*** DEBUG ***")
-        print("idx: " + str(idx))
-        print("BATCH_SIZE: " + str(self.config['BATCH_SIZE']))
-        print("Bounds: " + str(l_bound) + ", " + str(r_bound))
+        print("[" + self.name + "]" + " idx: " + str(idx))
+        print("[" + self.name + "]" + "BATCH_SIZE: " + str(self.config['BATCH_SIZE']))
+        print("[" + self.name + "]" + "Bounds: " + str(l_bound) + ", " + str(r_bound))
 
         count = 0
 
