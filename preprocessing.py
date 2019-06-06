@@ -220,7 +220,7 @@ class BatchGenerator(Sequence):
         y_batch = np.zeros((r_bound - l_bound, self.config['GRID_H'], self.config['GRID_W'], self.config['BOX'], 7+1+len(self.config['LABELS'])))
         
         print("idx: " + str(idx))
-        print("BATCH_SIZE" + self.config['BATCH_SIZE'])
+        print("BATCH_SIZE" + str(self.config['BATCH_SIZE']))
         print("Bounds: " + str(l_bound) + ", " + str(r_bound))
         count = 0
 
