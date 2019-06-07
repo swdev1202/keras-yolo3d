@@ -32,6 +32,7 @@ OBJ_THRESHOLD    = 0.3 #0.5
 NMS_THRESHOLD    = 0.3 #0.45
 # ANCHORS          = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
 ANCHORS          = np.multiply([39, 52, 18, 27, 27, 52, 29, 29, 24, 32], (GRID_H/IMAGE_H)).tolist()
+ANCHORS_NEW      = np.multiply([39, 18, 27, 29, 24, 52, 27, 52, 29, 32], (GRID_H/IMAGE_H)).tolist()
 NO_OBJECT_SCALE  = 1.0
 OBJECT_SCALE     = 5.0
 COORD_SCALE      = 1.0
@@ -336,7 +337,7 @@ def yolo3d_loss(y_true, y_pred):
     ### class mask: simply the position of the ground truth boxes (the predictors)
     class_mask = y_true[..., 7] * tf.gather(CLASS_WEIGHTS, true_box_class) * CLASS_SCALE
 
-    yaw_mask = y_true[..., 7] * YAW_SCALE
+    yaw_mask = y_true[..., 6] * YAW_SCALE
 
     """
     Warm-up training
@@ -396,5 +397,97 @@ def yolo3d_loss(y_true, y_pred):
     # loss = tf.print(loss, [loss], message='Total Loss \t', summarize=1000)
     # loss = tf.print(loss, [current_recall], message='Current Recall \t', summarize=1000)
     # loss = tf.print(loss, [total_recall/seen], message='Average Recall \t', summarize=1000)
+    
+    return loss
+
+def calc_iou(boxes1, boxes2):
+    boxx = tf.square(boxes1[:, :, :, :, 2:4])
+    boxes1_square = boxx[:, :, :, :, 0] * boxx[:, :, :, :, 1]
+    box = tf.stack([boxes1[:, :, :, :, 0] - boxx[:, :, :, :, 0] * 0.5,
+                    boxes1[:, :, :, :, 1] - boxx[:, :, :, :, 1] * 0.5,
+                    boxes1[:, :, :, :, 0] + boxx[:, :, :, :, 0] * 0.5,
+                    boxes1[:, :, :, :, 1] + boxx[:, :, :, :, 1] * 0.5])
+    boxes1 = tf.transpose(box, (1, 2, 3, 4, 0))
+
+    boxx = tf.square(boxes2[:, :, :, :, 2:4])
+    boxes2_square = boxx[:, :, :, :, 0] * boxx[:, :, :, :, 1]
+    box = tf.stack([boxes2[:, :, :, :, 0] - boxx[:, :, :, :, 0] * 0.5,
+                    boxes2[:, :, :, :, 1] - boxx[:, :, :, :, 1] * 0.5,
+                    boxes2[:, :, :, :, 0] + boxx[:, :, :, :, 0] * 0.5,
+                    boxes2[:, :, :, :, 1] + boxx[:, :, :, :, 1] * 0.5])
+    boxes2 = tf.transpose(box, (1, 2, 3, 4, 0))
+
+    left_up = tf.maximum(boxes1[:, :, :, :, :2], boxes2[:, :, :, :, :2])
+    right_down = tf.minimum(boxes1[:, :, :, :, 2:], boxes2[:, :, :, :, 2:])
+
+    intersection = tf.maximum(right_down - left_up, 0.0)
+    inter_square = intersection[:, :, :, :, 0] * intersection[:, :, :, :, 1]
+    union_square = boxes1_square + boxes2_square - inter_square
+
+    return tf.clip_by_value(1.0 * inter_square / union_square, 0.0, 1.0)
+
+def my_yolo3d_loss(y_true, y_pred):
+    predict = tf.reshape(y_pred, [BATCH_SIZE, GRID_W, GRID_H, BOX, 7+1+CLASS])
+    
+    xy_coordinate = tf.reshape(predict[:,:,:,:,:2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    wl_coordinate = tf.reshape(predict[:,:,:,:,3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    box_coordinate = tf.concat([xy_coordinate, wl_coordinate], axis=-1)
+
+    z_coordinate = tf.reshape(predict[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    h_coordinate = tf.reshape(predict[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+
+    yaw_coordinate = tf.reshape(predict[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+
+    box_confidence = tf.reshape(predict[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+
+    box_classes = tf.reshape(predict[:,:,:,:,8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+
+    offset = np.transpose(np.reshape(np.array([np.arange(GRID_W)] * GRID_W * BOX),
+                                         [BOX, GRID_W, GRID_H]), (1, 2, 0))
+    offset = tf.reshape(tf.constant(offset, dtype=tf.float32), [1, GRID_W, GRID_H, BOX])
+    offset = tf.tile(offset, (BATCH_SIZE, 1, 1, 1))
+
+    x_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 0])) + offset) / GRID_W
+    y_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(offset, (0, 2, 1, 3))) / GRID_W
+    w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W)
+    l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H)
+
+    z_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * z_coordinate)))
+    h_exp = tf.sqrt(tf.exp(h_coordinate))
+
+    # stack adds 1 additional dimension
+    boxes1 = tf.stack(x_sigmoid, y_sigmoid, w_exp, l_exp)
+    box_coor_trans = tf.transpose(boxes1, (1,2,3,4,0))
+    box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
+    box_classes = tf.nn.softmax(box_classes)
+
+    response = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+    xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    wl_true = tf.reshape(y_true[:,:,:,:, 3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    boxes = tf.concat([xy_true, wl_true], axis=-1)
+    classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+
+    z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+    h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+    
+    yaw_true = tf.reshape(y_true[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+
+    iou = calc_iou(box_coor_trans, boxes)
+    best_box = tf.cast(tf.equal(iou, tf.reduce_max(iou, axis=-1, keep_dims=True)), tf.float32)
+    confs = tf.expand_dims(best_box * response, axis=4)
+
+    conf_id = NO_OBJECT_SCALE * (1.0 - confs) + OBJECT_SCALE * confs
+    prob_id = CLASS_SCALE * confs
+    coor_id = COORD_SCALE * confs
+    yaw_id = YAW_SCALE * confs
+
+    conf_loss = conf_id * tf.square(box_confidence - confs)
+    prob_loss = prob_id * tf.square(box_classes - classes)
+    coor_loss = coor_id * tf.square(box_coor_trans - boxes)
+    z_loss = coor_id * tf.square(z_true - z_sigmoid)
+    h_loss = coor_id * tf.square(h_true - h_exp)
+    yaw_loss = yaw_id * tf.square(yaw_true - yaw_coordinate)
+
+    loss = conf_loss + prob_loss + coor_loss + z_loss + h_loss + yaw_loss
     
     return loss

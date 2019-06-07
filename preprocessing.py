@@ -135,7 +135,7 @@ def parse_annotations(ann_file, img_dir):
                 obj_dict['ymin'] = int(y_pos - y_size//2)
                 obj_dict['ymax'] = int(y_pos + y_size//2)
                 obj_dict['yaw'] = yaw / np.pi
-                obj_dict['z'] = z_pos
+                obj_dict['z'] = z_pos / 2.0 # height range (-2.0, 0.0)
                 obj_dict['height'] = z_size
 
                 img['object'] += [obj_dict]
