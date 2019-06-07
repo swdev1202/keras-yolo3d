@@ -374,8 +374,8 @@ def yolo3d_loss(y_true, y_pred):
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
     loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-    loss = loss_xy + loss_z + loss_wl + loss_h + loss_conf + loss_class + loss_yaw
-    # loss = loss_xy + loss_wl + loss_conf + loss_class
+    # loss = loss_xy + loss_z + loss_wl + loss_h + loss_conf + loss_class + loss_yaw
+    loss = loss_xy + loss_wl + loss_conf + loss_class
 
     nb_true_box = tf.reduce_sum(y_true[..., 7])
     nb_pred_box = tf.reduce_sum(tf.cast(true_box_conf > 0.5, tf.float32) * tf.cast(pred_box_conf > 0.3, tf.float32))
