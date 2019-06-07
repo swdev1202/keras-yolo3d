@@ -254,13 +254,13 @@ def yolo3d_loss(y_true, y_pred):
     true_box_wl = y_true[..., 3:5] # number of cells accross, horizontally and vertically
     true_box_h = y_true[..., 5]
     #---------------debugging code-----------------#
-    tf.expand_dims(true_box_h, -1)
+    # tf.expand_dims(true_box_h, -1)
     #---------------debugging code-----------------#
 
     ### adjust yaw
     true_box_yaw = y_true[..., 6]
     #---------------debugging code-----------------#
-    tf.expand_dims(true_box_yaw, -1)
+    # tf.expand_dims(true_box_yaw, -1)
     #---------------debugging code-----------------#
 
     ### adjust confidence(IOU)
@@ -358,19 +358,19 @@ def yolo3d_loss(y_true, y_pred):
 
     # Add loss_z term
     loss_xy = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    # loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_15
+    loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_15
 
     # Need to change to wlh
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    # loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_17
+    loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_17
 
-    # loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_18
+    loss_yaw = YAW_SCALE * tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_18
 
     loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2. # mul20?
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
     loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-    # loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
+    loss = loss_xy + loss_z + loss_wl + loss_h + loss_yaw + loss_conf + loss_class
     loss = loss_xy + loss_wl + loss_conf + loss_class
 
     nb_true_box = tf.reduce_sum(y_true[..., 7])
