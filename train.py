@@ -79,7 +79,7 @@ K.set_session(sess)
 model = create_yolo3d_model()
 # optimizer = Adam(lr=0.5e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 optimizer = SGD(lr=1e-4, decay=0.0005, momentum=0.9)
-model.compile(loss=yolo3d_loss, optimizer=optimizer)
+model.compile(loss=my_yolo3d_loss, optimizer=optimizer)
 model.summary()
 
 print([n.name for n in tf.get_default_graph().as_graph_def().node])
