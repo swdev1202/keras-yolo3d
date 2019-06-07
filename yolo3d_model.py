@@ -488,6 +488,9 @@ def my_yolo3d_loss(y_true, y_pred):
     h_loss = coor_id * tf.square(h_true - h_exp)
     yaw_loss = yaw_id * tf.square(yaw_true - yaw_coordinate)
 
-    loss = conf_loss + prob_loss + coor_loss + z_loss + h_loss + yaw_loss
+    # loss = conf_loss + prob_loss + coor_loss + z_loss + h_loss + yaw_loss
     
+    loss = tf.concat([conf_loss, prob_loss, coor_loss, z_loss, h_loss, yaw_loss], axis=4)
+    loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss')
+
     return loss
