@@ -196,7 +196,9 @@ def create_yolo3d_model():
     return model
 
 def yolo3d_loss(y_true, y_pred):
-    mask_shape = tf.shape(y_true)[:5]
+    mask_shape = tf.shape(y_true)[:4]
+    print("Mask shape: ")
+    print(mask_shape.shape)
     
     cell_x = tf.cast(tf.reshape(tf.tile(tf.range(GRID_W), [GRID_H]), (1, GRID_H, GRID_W, 1, 1)), tf.float32)
     cell_y = tf.transpose(cell_x, (0,2,1,3,4))
