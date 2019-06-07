@@ -456,7 +456,7 @@ def my_yolo3d_loss(y_true, y_pred):
     h_exp = tf.sqrt(tf.exp(h_coordinate))
 
     # stack adds 1 additional dimension
-    boxes1 = tf.stack(x_sigmoid, y_sigmoid, w_exp, l_exp)
+    boxes1 = tf.stack([x_sigmoid, y_sigmoid, w_exp, l_exp])
     box_coor_trans = tf.transpose(boxes1, (1,2,3,4,0))
     box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
     box_classes = tf.nn.softmax(box_classes)
