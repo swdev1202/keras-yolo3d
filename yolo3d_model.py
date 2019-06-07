@@ -467,10 +467,10 @@ def my_yolo3d_loss(y_true, y_pred):
     boxes = tf.concat([xy_true, wl_true], axis=-1)
     classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
 
-    z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX])
-    h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+    z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
     
-    yaw_true = tf.reshape(y_true[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+    yaw_true = tf.reshape(y_true[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
 
     iou = calc_iou(box_coor_trans, boxes)
     best_box = tf.cast(tf.equal(iou, tf.reduce_max(iou, axis=-1, keep_dims=True)), tf.float32)
