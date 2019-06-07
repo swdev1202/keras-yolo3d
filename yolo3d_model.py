@@ -450,10 +450,10 @@ def my_yolo3d_loss(y_true, y_pred):
     x_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 0])) + offset) / GRID_W
     y_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(offset, (0, 2, 1, 3))) / GRID_W
     
-    # w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W)
-    # l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H)
-    w_exp = tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W
-    l_exp = tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H
+    w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W)
+    l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H)
+    #w_exp = tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W
+    #l_exp = tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H
 
     z_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * z_coordinate)))
     h_exp = tf.sqrt(tf.exp(h_coordinate))
@@ -491,10 +491,8 @@ def my_yolo3d_loss(y_true, y_pred):
     h_loss = coor_id * tf.square(h_true - h_exp)
     yaw_loss = yaw_id * tf.square(yaw_true - yaw_coordinate)
 
-    # loss = conf_loss + prob_loss + coor_loss + z_loss + h_loss + yaw_loss
-    
-    #loss = tf.concat([conf_loss, prob_loss, coor_loss, z_loss, h_loss, yaw_loss], axis=4)
-    loss = tf.concat([conf_loss, prob_loss, coor_loss], axis=4)
+    loss = tf.concat([conf_loss, prob_loss, coor_loss, z_loss, h_loss, yaw_loss], axis=4)
+    # loss = tf.concat([conf_loss, prob_loss, coor_loss], axis=4)
     loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss')
 
     return loss
