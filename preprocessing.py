@@ -230,7 +230,7 @@ class BatchGenerator(Sequence):
             image_name = train_instance['filename']
             count += 1
 
-            print("File " + str(count) + ": " + image_name)
+            #print("File " + str(count) + ": " + image_name)
             img = cv2.imread(image_name)[:,:,0:2]
 
             if img is None: print('Cannot find ', image_name)
@@ -400,7 +400,7 @@ class MyGenerator(Sequence):
         for train_instance in images_batch:
             count += 1
             image_name = train_instance['filename']
-            print("File " + str(count) + ": " + image_name)
+            # print("File " + str(count) + ": " + image_name)
 
             img = cv2.imread(image_name)[:,:,0:2]
             if img is None: print('Cannot find ', image_name)
