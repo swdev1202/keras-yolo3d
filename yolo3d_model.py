@@ -368,7 +368,7 @@ def yolo3d_loss(y_true, y_pred):
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
     loss_h = tf.reduce_sum(tf.square(true_box_h-pred_box_h) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_17
 
-    loss_yaw = tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * yaw_mask) / (nb_yaw_box + 1e-6) / 2. # mul_18
+    loss_yaw = tf.reduce_sum(tf.square(true_box_yaw - pred_box_yaw) * tf.zeros([3,2])) / (nb_yaw_box + 1e-6) / 2. # mul_18
 
     loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2. # mul20?
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
