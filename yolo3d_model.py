@@ -225,13 +225,13 @@ def yolo3d_loss(y_true, y_pred):
     pred_box_wl = tf.exp(y_pred[..., 3:5]) * np.reshape(ANCHORS, [1,1,1,BOX,2])
     pred_box_h = tf.exp(y_pred[..., 5])
     #---------------debugging code-----------------#
-    tf.expand_dims(pred_box_h, -1)
+    # tf.expand_dims(pred_box_h, -1)
     #---------------debugging code-----------------#
 
     ### adjust yaw
     pred_box_yaw = tf.sigmoid(y_pred[..., 6])
     #---------------debugging code-----------------#
-    tf.expand_dims(pred_box_yaw, -1)
+    # tf.expand_dims(pred_box_yaw, -1)
     #---------------debugging code-----------------#
 
     ### adjust confidence
