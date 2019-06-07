@@ -362,7 +362,7 @@ def yolo3d_loss(y_true, y_pred):
 
     # Add loss_z term
     loss_xy = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy) * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * coord_mask) / (nb_coord_box + 1e-6) / 2. # mul_15
+    loss_z = tf.reduce_sum(tf.square(true_box_z-pred_box_z) * tf.zeros([4,38,38,5])) / (nb_coord_box + 1e-6) / 2. # mul_15
 
     # Need to change to wlh
     loss_wl = tf.reduce_sum(tf.square(true_box_wl-pred_box_wl) * coord_mask) / (nb_coord_box + 1e-6) / 2.
