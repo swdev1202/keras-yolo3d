@@ -484,8 +484,8 @@ class MyGenerator(Sequence):
             instance_count += 1
             # print(instance_count)
 
-        print("*************")
-        print('new batch created', idx)
+        #print("*************")
+        #print('new batch created', idx)
 
         assert not np.any(np.isnan(x_batch))
         assert not np.any(np.isnan(y_batch))
