@@ -539,6 +539,7 @@ def infer_image(weights, image_path, output_path, save_image=True):
         ch3 = np.zeros(ch1.shape, dtype=ch1.dtype)
         image = cv2.merge((ch1, ch2, ch3))
         image = draw_boxes(image, boxes, labels=LABELS)
-        cv2.imwrite(output_path + filename + "-predict.jpg", image)
+        # cv2.imwrite(output_path + filename + "-predict.jpg", image)
         # print("Image saved at " + output_path + filename + "-predict.jpg")
+        cv2.imwrite(output_path + "-predict.jpg", image)
         print("Image saved at " + output_path + "test-predict.jpg")

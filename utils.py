@@ -109,7 +109,7 @@ def decode_netout(netout, anchors, nb_class, obj_threshold=0.3, nms_threshold=0.
                     yaw = yaw * np.pi
                     confidence = netout[row,col,b,7]
                     
-                    box = BoundBox(x-w/2, y-h/2, x+w/2, y+h/2, z, yaw, h, c=confidence, classes=classes)
+                    box = BoundBox(x-w/2, y-l/2, x+w/2, y+l/2, z, yaw, h, c=confidence, classes=classes)
                     
                     boxes.append(box)
 
