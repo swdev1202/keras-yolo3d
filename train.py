@@ -78,7 +78,7 @@ K.set_session(sess)
 
 model = create_yolo3d_model()
 #optimizer = Adam(lr=1e-6, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-optimizer = SGD(lr=1e-3, decay=0.0005, momentum=0.9)
+optimizer = SGD(lr=1e-8, decay=0.0005, momentum=0.9)
 model.compile(loss=my_yolo3d_loss, optimizer=optimizer)
 model.summary()
 

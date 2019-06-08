@@ -39,7 +39,7 @@ COORD_SCALE      = 1.0
 CLASS_SCALE      = 1.0
 YAW_SCALE        = 1.0
 
-BATCH_SIZE       = 20
+BATCH_SIZE       = 16
 WARM_UP_BATCHES  = 0
 TRUE_BOX_BUFFER  = 20
 
@@ -485,7 +485,8 @@ def my_yolo3d_loss(y_true, y_pred):
     yaw_id = YAW_SCALE * confs
 
     conf_loss = conf_id * tf.square(box_confidence - confs)
-    prob_loss = prob_id * tf.square(box_classes - classes)
+    # prob_loss = prob_id * tf.square(box_classes - classes)
+    prob_loss = prob_id * tf.nn.sparse_softmax_cross_entropy_with_logits(logits=box_classes, labels=classes)
     coor_loss = coor_id * tf.square(box_coor_trans - boxes)
     z_loss = coor_id * tf.square(z_true - z_sigmoid)
     h_loss = coor_id * tf.square(h_true - h_exp)
