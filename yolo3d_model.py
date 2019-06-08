@@ -537,6 +537,8 @@ def infer_image(weights, image_path, output_path, save_image=True):
     # plt.imshow(image[:,:,::-1]); plt.show()
 
     if save_image:
-        image[:,:,2] = np.zeros(608, 608)
+        ch1, ch2 = cv2.split(image)
+        ch3 = np.zeros(ch1.shape, dtype=ch1.dtype)
+        image = cv2.merge((ch1, ch2, ch3))
         cv2.imwrite(output_path + filename + "-predict.jpg", image)
         print("Image saved")
