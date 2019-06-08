@@ -33,6 +33,7 @@ NMS_THRESHOLD    = 0.3 #0.45
 # ANCHORS          = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
 ANCHORS          = np.multiply([39, 52, 18, 27, 27, 52, 29, 29, 24, 32], (GRID_H/IMAGE_H)).tolist()
 ANCHORS_NEW      = np.multiply([39, 18, 27, 29, 24, 52, 27, 52, 29, 32], (GRID_H/IMAGE_H)).tolist()
+ANCHORS_APOLLO    = np.multiply([15, 22, 4, 6, 12, 32, 65, 4, 14, 29], (GRID_H/IMAGE_H)).tolist()
 NO_OBJECT_SCALE  = 1.0
 OBJECT_SCALE     = 5.0
 COORD_SCALE      = 1.0
@@ -450,10 +451,10 @@ def my_yolo3d_loss(y_true, y_pred):
     x_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 0])) + offset) / GRID_W
     y_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(offset, (0, 2, 1, 3))) / GRID_W
     
-    w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W)
-    l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H)
-    #w_exp = tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W
-    #l_exp = tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H
+    w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_APOLLO[:5], [1, 1, 1, 5]) / GRID_W)
+    l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_APOLLO[5:], [1, 1, 1, 5]) / GRID_H)
+    #w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W)
+    #l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H)
 
     z_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * z_coordinate)))
     h_exp = tf.sqrt(tf.exp(h_coordinate))
