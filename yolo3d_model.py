@@ -462,7 +462,7 @@ def my_yolo3d_loss(y_true, y_pred):
     boxes1 = tf.stack([x_sigmoid, y_sigmoid, w_exp, l_exp])
     box_coor_trans = tf.transpose(boxes1, (1,2,3,4,0))
     box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
-    box_classes = tf.nn.softmax(box_classes)
+    # box_classes = tf.nn.softmax(box_classes)
 
     response = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
     xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
