@@ -19,3 +19,5 @@ ENV/
 annotations/
 
 *.pyc
+
+*.h5

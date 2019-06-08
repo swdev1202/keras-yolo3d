@@ -26,10 +26,10 @@ generator_config = {
     'TRUE_BOX_BUFFER' : TRUE_BOX_BUFFER,
 }
 
-train_annot_file = "../dataset/annotations/train_ann.txt"
-train_image_folder = "../dataset/train/"
-valid_annot_file = "../dataset/annotations/val_ann.txt"
-valid_image_folder = "../dataset/val/"
+train_annot_file = "../dataset_front/annotations/train_ann.txt"
+train_image_folder = "../dataset_front/train/"
+valid_annot_file = "../dataset_front/annotations/val_ann.txt"
+valid_image_folder = "../dataset_front/val/"
 
 train_imgs, seen_train_labels = parse_annotations(train_annot_file, train_image_folder)
 valid_imgs, seen_valid_labels = parse_annotations(valid_annot_file, valid_image_folder)
