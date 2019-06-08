@@ -515,7 +515,7 @@ def infer_image(weights, image_path, output_path, save_image=True):
 
     image = cv2.imread(image_path)
     image = image[:,:,:2]
-    dummy_array = np.zeros((1,1,1,1,TRUE_BOX_BUFFER,4))
+    dummy_array = np.zeros((1,1,1,1,TRUE_BOX_BUFFER,7))
 
     # plt.figure(figsize=(10,10))
 
