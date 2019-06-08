@@ -469,6 +469,8 @@ def my_yolo3d_loss(y_true, y_pred):
     wl_true = tf.reshape(y_true[:,:,:,:, 3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
     boxes = tf.concat([xy_true, wl_true], axis=-1)
     classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+    # trial
+    classes = tf.argmax(classes, -1)
 
     z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
     h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
