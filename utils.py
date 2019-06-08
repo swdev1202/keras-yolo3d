@@ -74,7 +74,7 @@ def draw_boxes(image, boxes, labels):
                     cv2.FONT_HERSHEY_SIMPLEX, 
                     1e-3 * image_h, 
                     (0,255,0), 2)
-        print("Box of " + box.get_label())
+        print("Box of " + str(box.get_label()))
         
     return image          
         
