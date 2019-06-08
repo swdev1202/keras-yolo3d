@@ -1,7 +1,7 @@
 from yolo3d_model import *
 import matplotlib.pyplot as plt
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adagrad, Adam
 import keras.backend as K
 import tensorflow as tf
 import numpy as np
@@ -77,8 +77,9 @@ sess = tf.Session(config=config)
 K.set_session(sess)
 
 model = create_yolo3d_model()
-optimizer = Adam(lr=1e-6, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+#optimizer = Adam(lr=1e-6, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 #optimizer = SGD(lr=1e-6, decay=0.0005, momentum=0.9)
+optimizer = Adagrad(lr=1e-6, epsilon=1e-08, decay=0.0)
 model.compile(loss=my_yolo3d_loss, optimizer=optimizer)
 model.summary()
 
