@@ -540,4 +540,5 @@ def infer_image(weights, image_path, output_path, save_image=True):
         image = cv2.merge((ch1, ch2, ch3))
         image = draw_boxes(image, boxes, labels=LABELS)
         cv2.imwrite(output_path + filename + "-predict.jpg", image)
-        print("Image saved at " + output_path + filename + "-predict.jpg")
+        # print("Image saved at " + output_path + filename + "-predict.jpg")
+        print("Image saved at " + output_path + "test-predict.jpg")
