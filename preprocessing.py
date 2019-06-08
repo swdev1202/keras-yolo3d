@@ -486,4 +486,7 @@ class MyGenerator(Sequence):
 
         print("*************")
         print('new batch created', idx)
+
+        assert not np.any(np.isnan(x_batch))
+        assert not np.any(np.isnan(y_batch))
         return [x_batch, b_batch], y_batch
