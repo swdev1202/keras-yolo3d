@@ -11,6 +11,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import cv2
+from utils import decode_netout, draw_boxes
 
 #################################################
 ## Setup
@@ -462,7 +463,7 @@ def my_yolo3d_loss(y_true, y_pred):
     boxes1 = tf.stack([x_sigmoid, y_sigmoid, w_exp, l_exp])
     box_coor_trans = tf.transpose(boxes1, (1,2,3,4,0))
     box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
-    # box_classes = tf.nn.softmax(box_classes)
+    box_classes = tf.nn.softmax(box_classes)
 
     response = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
     xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
@@ -470,7 +471,7 @@ def my_yolo3d_loss(y_true, y_pred):
     boxes = tf.concat([xy_true, wl_true], axis=-1)
     classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
     # trial
-    classes = tf.argmax(classes, -1)
+    # classes = tf.argmax(classes, -1)
 
     z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
     h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
@@ -487,9 +488,9 @@ def my_yolo3d_loss(y_true, y_pred):
     yaw_id = YAW_SCALE * confs
 
     conf_loss = conf_id * tf.square(box_confidence - confs)
-    # prob_loss = prob_id * tf.square(box_classes - classes)
-    prob_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=box_classes, labels=classes)
-    prob_loss = tf.expand_dims(prob_loss, axis=-1)
+    prob_loss = prob_id * tf.square(box_classes - classes)
+    # prob_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=box_classes, labels=classes)
+    # prob_loss = tf.expand_dims(prob_loss, axis=-1)
     # prob_loss = prob_id * tf.square(prob_loss)
     coor_loss = coor_id * tf.square(box_coor_trans - boxes)
     z_loss = coor_id * tf.square(z_true - z_sigmoid)
@@ -501,3 +502,39 @@ def my_yolo3d_loss(y_true, y_pred):
     loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss')
 
     return loss
+
+def infer_image(weights, image_path, output_path, save_image=True):
+
+    model = create_yolo3d_model()
+
+    model.load_weights(weights)
+
+    filename = image_path.split("/")
+    filename = filename[-1]
+    filename = filename[:-4]
+
+    image = cv2.imread(image_path)
+    dummy_array = np.zeros((1,1,1,1,TRUE_BOX_BUFFER,4))
+
+    # plt.figure(figsize=(10,10))
+
+    input_image = cv2.resize(image, (608, 608))
+    input_image = input_image / 255.
+    input_image = input_image[:,:,::-1]
+    input_image = np.expand_dims(input_image, 0)
+
+    netout = model.predict([input_image, dummy_array])
+
+    boxes = decode_netout(netout[0], 
+                        obj_threshold=OBJ_THRESHOLD,
+                        nms_threshold=NMS_THRESHOLD,
+                        anchors=ANCHORS, 
+                        nb_class=CLASS)
+                
+    image = draw_boxes(image, boxes, labels=LABELS)
+
+    # plt.imshow(image[:,:,::-1]); plt.show()
+
+    if save_image:
+        cv2.imwrite(output_path + filename + "-predict.jpg", image)
+        print("Image saved")
