@@ -462,7 +462,7 @@ def my_yolo3d_loss(y_true, y_pred):
     boxes1 = tf.stack([x_sigmoid, y_sigmoid, w_exp, l_exp])
     box_coor_trans = tf.transpose(boxes1, (1,2,3,4,0))
     box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
-    box_classes = tf.nn.softmax(box_classes)
+    # box_classes = tf.nn.softmax(box_classes)
 
     response = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
     xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
@@ -470,7 +470,7 @@ def my_yolo3d_loss(y_true, y_pred):
     boxes = tf.concat([xy_true, wl_true], axis=-1)
     classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
     # trial
-    # classes = tf.argmax(classes, -1)
+    classes = tf.argmax(classes, -1)
 
     z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
     h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
@@ -487,9 +487,9 @@ def my_yolo3d_loss(y_true, y_pred):
     yaw_id = YAW_SCALE * confs
 
     conf_loss = conf_id * tf.square(box_confidence - confs)
-    prob_loss = prob_id * tf.square(box_classes - classes)
-    # prob_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=box_classes, labels=classes)
-    prob_loss = prob_id * tf.square(prob_loss)
+    # prob_loss = prob_id * tf.square(box_classes - classes)
+    prob_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=box_classes, labels=classes)
+    # prob_loss = prob_id * tf.square(prob_loss)
     coor_loss = coor_id * tf.square(box_coor_trans - boxes)
     z_loss = coor_id * tf.square(z_true - z_sigmoid)
     h_loss = coor_id * tf.square(h_true - h_exp)
