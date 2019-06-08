@@ -500,12 +500,9 @@ def my_yolo3d_loss(y_true, y_pred):
     
     loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss')
 
+    ###############debug################
+    _conf_loss = tf.reduce_sum(conf_loss)
 
-    loss = tf.Print(loss, [conf_loss], message="Loss Conf \t")
-    loss = tf.Print(loss, [prob_loss], message='Loss Prob \t', summarize=1000)
-    loss = tf.Print(loss, [coor_loss], message='Loss Coor \t', summarize=1000)
-    loss = tf.Print(loss, [z_loss], message='Loss Z \t', summarize=1000)
-    loss = tf.Print(loss, [h_loss], message='Loss H \t', summarize=1000)
-    loss = tf.Print(loss, [yaw_loss], message='Loss Yaw \t', summarize=1000)
+    _conf_loss = tf.Print(_conf_loss, [_conf_loss], message="Loss Conf \t")
 
     return loss
