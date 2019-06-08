@@ -39,7 +39,7 @@ COORD_SCALE      = 1.0
 CLASS_SCALE      = 1.0
 YAW_SCALE        = 1.0
 
-BATCH_SIZE       = 8
+BATCH_SIZE       = 16
 WARM_UP_BATCHES  = 0
 TRUE_BOX_BUFFER  = 20
 
