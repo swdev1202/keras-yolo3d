@@ -488,7 +488,8 @@ def my_yolo3d_loss(y_true, y_pred):
 
     conf_loss = conf_id * tf.square(box_confidence - confs)
     # prob_loss = prob_id * tf.square(box_classes - classes)
-    prob_loss = prob_id * tf.nn.sparse_softmax_cross_entropy_with_logits(logits=box_classes, labels=classes)
+    prob_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=box_classes, labels=classes)
+    prob_loss = prob_id * tf.square(prob_loss)
     coor_loss = coor_id * tf.square(box_coor_trans - boxes)
     z_loss = coor_id * tf.square(z_true - z_sigmoid)
     h_loss = coor_id * tf.square(h_true - h_exp)
