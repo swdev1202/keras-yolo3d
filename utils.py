@@ -82,28 +82,33 @@ def decode_netout(netout, anchors, nb_class, obj_threshold=0.3, nms_threshold=0.
 
     boxes = []
     
-    # decode the output by the network
-    netout[..., 4]  = _sigmoid(netout[..., 4])
-    netout[..., 5:] = netout[..., 4][..., np.newaxis] * _softmax(netout[..., 5:])
-    netout[..., 5:] *= netout[..., 5:] > obj_threshold
+    # decode the output by the network ????????
+    netout[..., 7]  = _sigmoid(netout[..., 7])
+    netout[..., 8:] = netout[..., 7][..., np.newaxis] * _softmax(netout[..., 8:])
+    netout[..., 8:] *= netout[..., 8:] > obj_threshold
     
     for row in range(grid_h):
         for col in range(grid_w):
             for b in range(nb_box):
                 # from 4th element onwards are confidence and class classes
-                classes = netout[row,col,b,5:]
+                # classes = netout[row,col,b,5:]
+                classes = netout[row,col,b,8:]
                 
                 if np.sum(classes) > 0:
                     # first 4 elements are x, y, w, and h
-                    x, y, w, h = netout[row,col,b,:4]
+                    # x, y, w, h = netout[row,col,b,:4]
+                    x, y, z, w, l, h, yaw = netout[row, col, b, :8]
 
                     x = (col + _sigmoid(x)) / grid_w # center position, unit: image width
                     y = (row + _sigmoid(y)) / grid_h # center position, unit: image height
+                    z = _sigmoid(z)
                     w = anchors[2 * b + 0] * np.exp(w) / grid_w # unit: image width
-                    h = anchors[2 * b + 1] * np.exp(h) / grid_h # unit: image height
-                    confidence = netout[row,col,b,4]
+                    l = anchors[2 * b + 1] * np.exp(l) / grid_h # unit: image height
+                    h = np.exp(h)
+                    yaw = yaw * np.pi
+                    confidence = netout[row,col,b,7]
                     
-                    box = BoundBox(x-w/2, y-h/2, x+w/2, y+h/2, confidence, classes)
+                    box = BoundBox(x-w/2, y-h/2, x+w/2, y+h/2, z, yaw, h, c=confidence, classes=classes)
                     
                     boxes.append(box)
 
