@@ -21,7 +21,7 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Setup parameters
-LABELS = ['scooter', 'hoverboard', 'skateboard', 'segway', 'onewheel']
+LABELS = ['smallcar', 'bigcar', 'pedestrian', 'cyclist']
 
 IMAGE_H, IMAGE_W = 608, 608
 GRID_H,  GRID_W  = 38 , 38 #??

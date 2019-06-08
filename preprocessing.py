@@ -14,7 +14,7 @@ def prune_gt_annotations(image_dir, input_gt, output_gt):
         for line in f_in:
             line_split = line.split(' ')
             image_name = line_split[0]
-            image_name = image_name[:-4] + '.jpg'
+            image_name = image_name[:-4] + '.png'
 
             if image_name in list_images:
                 with open(output_gt, 'a') as f_out:
@@ -58,14 +58,14 @@ def split_test_training(input_images_dir,
                 with open(val_ann, 'a') as f_out:
                     f_out.write(line)
                 filename = line.split(' ')[0]
-                filename = filename[:-4] + '.jpg'
+                filename = filename[:-4] + '.png'
                 copy(input_images_dir + filename, val_images_dir + filename)
                 val_num += 1
             else: # send to train set
                 with open(train_ann, 'a') as f_out:
                     f_out.write(line)
                 filename = line.split(' ')[0]
-                filename = filename[:-4] + '.jpg'
+                filename = filename[:-4] + '.png'
                 copy(input_images_dir + filename, train_images_dir + filename)
                 train_num += 1
             row_num += 1
@@ -84,11 +84,10 @@ def split_test_training(input_images_dir,
 # split_test_training(input_images_dir, input_ann, train_images_dir, train_ann, val_images_dir, val_ann, split=0.1)
 
 def parse_annotations(ann_file, img_dir):
-    labels_map = {0: "scooter",
-                  1: "hoverboard",
-                  2: "skateboard",
-                  3: "segway",
-                  4: "onewheel"}
+    labels_map = {1: "smallcar",
+                  2: "bigcar",
+                  3: "pedestrian",
+                  4: "cyclist"}
 
     all_imgs = []
     seen_labels = {}
@@ -102,7 +101,7 @@ def parse_annotations(ann_file, img_dir):
             line_split = line.split(' ')
 
             filename = line_split[0]
-            filename = filename[:-4] + '.jpg'
+            filename = filename[:-4] + '.png'
             filepath = img_dir + filename
 
             img['filename'] = filepath
