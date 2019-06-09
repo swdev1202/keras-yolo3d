@@ -496,15 +496,11 @@ def my_yolo3d_loss(y_true, y_pred):
     
     #classes = tf.argmax(classes, -1)
 
-    # z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    # h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    
-    # yaw_true = tf.reshape(y_true[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    z_true = y_true[:,:,:,:,2]
-    h_true = tf.sqrt(y_true[:,:,:,:,5])
-    
-    yaw_true =y_true[:,:,:,:,6]
+    z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
 
+    yaw_true = tf.reshape(y_true[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    
     iou = calc_iou(box_coor_trans, boxes) # 0.0 - 1.0 iou value , shape = (4,38,38,5)
     best_box = tf.cast(tf.equal(iou, tf.reduce_max(iou, axis=-1, keep_dims=True)), tf.float32) # (4,38,38,5)
     confs = tf.expand_dims(best_box * objectness, axis=4) #(4,38,38,5,1)
