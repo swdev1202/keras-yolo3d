@@ -89,7 +89,7 @@ print([n.name for n in tf.get_default_graph().as_graph_def().node])
 
 model.fit_generator(generator        = train_batch, 
                     steps_per_epoch  = len(train_batch), 
-                    epochs           = 150,
+                    epochs           = 200,
                     verbose          = 1,
                     validation_data  = valid_batch,
                     validation_steps = len(valid_batch),
