@@ -53,15 +53,15 @@ early_stop = EarlyStopping(monitor='val_loss',
                            mode='min', 
                            verbose=1)
 
-checkpoint = ModelCheckpoint('lgsvl_yolo3d.h5', 
+checkpoint = ModelCheckpoint('apollo_yolo3d.h5', 
                              monitor='val_loss', 
                              verbose=1, 
                              save_best_only=True, 
                              mode='min', 
                              period=1)
 
-tb_counter  = len([log for log in os.listdir(os.path.expanduser('logs/')) if 'lgsvl_' in log]) + 1
-tensorboard = TensorBoard(log_dir=os.path.expanduser('~/logs/') + 'lgsvl_' + '_' + str(tb_counter), 
+tb_counter  = len([log for log in os.listdir(os.path.expanduser('logs/')) if 'apollo_' in log]) + 1
+tensorboard = TensorBoard(log_dir=os.path.expanduser('~/logs/') + 'apollo_' + '_' + str(tb_counter), 
                           histogram_freq=0, 
                           write_graph=True, 
                           write_images=False)
