@@ -546,4 +546,4 @@ def my_yolo3d_loss(y_true, y_pred):
     _loss = tf.Print(_loss, [_yaw_loss], message="Loss Yaw \t", summarize=1000)
     _loss = tf.Print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
 
-    return _loss
+    return loss
