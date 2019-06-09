@@ -100,11 +100,11 @@ def decode_netout(netout, anchors, nb_class, obj_threshold=0.3, nms_threshold=0.
                     # x, y, w, h = netout[row,col,b,:4]
                     x, y, z, w, l, h, yaw = netout[row, col, b, :7]
 
-                    x = ((col + _sigmoid(x)) / grid_w) * 608 # center position, unit: image width
-                    y = ((row + _sigmoid(y)) / grid_h) * 608 # center position, unit: image height
+                    x = (col + _sigmoid(x)) / grid_w # center position, unit: image width
+                    y = (row + _sigmoid(y)) / grid_h # center position, unit: image height
                     z = _sigmoid(z)
-                    w = (anchors[2 * b + 0] * np.exp(w) / grid_w) * 608 # unit: image width
-                    l = (anchors[2 * b + 1] * np.exp(l) / grid_h) * 608 # unit: image height
+                    w = anchors[2 * b + 0] * np.exp(w) / grid_w # unit: image width
+                    l = anchors[2 * b + 1] * np.exp(l) / grid_h # unit: image height
                     h = np.exp(h)
                     yaw = yaw * np.pi
                     confidence = netout[row,col,b,7]
