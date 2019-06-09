@@ -521,7 +521,10 @@ def my_yolo3d_loss(y_true, y_pred):
     #prob_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits = box_classes, labels=classes)
     #prob_loss = prob_id * tf.expand_dims(prob_loss, axis=-1)
 
+    loss = tf.concat([conf_loss, prob_loss, coor_loss, z_loss, h_loss, yaw_loss], axis=4) # (4,38,38,5,13)
+    # loss = tf.concat([conf_loss, prob_loss, coor_loss], axis=4)
     
+    loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss') # (4,1,1,1,1) -> mean -> (1)
 
     ###############debug################
     _conf_loss = tf.reduce_sum(conf_loss)
@@ -542,9 +545,4 @@ def my_yolo3d_loss(y_true, y_pred):
     _loss = tf.Print(_loss, [_yaw_loss], message="Loss Yaw \t", summarize=1000)
     _loss = tf.Print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
 
-    loss = tf.concat([conf_loss, prob_loss, coor_loss, z_loss, h_loss, yaw_loss], axis=4) # (4,38,38,5,13)
-    # loss = tf.concat([conf_loss, prob_loss, coor_loss], axis=4)
-    
-    loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss') # (4,1,1,1,1) -> mean -> (1)
-
-    return loss
+    return _loss
