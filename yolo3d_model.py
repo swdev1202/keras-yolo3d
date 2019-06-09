@@ -39,10 +39,13 @@ OBJECT_SCALE     = 5.0
 COORD_SCALE      = 1.0
 CLASS_SCALE      = 1.0
 YAW_SCALE        = 1.0
+Z_RANGE          = 2.0
+H_RANGE          = 4.0
 
 BATCH_SIZE       = 16
 WARM_UP_BATCHES  = 0
 TRUE_BOX_BUFFER  = 20
+
 
 #################################################
 ## Construct Network
@@ -401,14 +404,14 @@ def yolo3d_loss(y_true, y_pred):
     
     return loss
 
-def calc_iou(boxes1, boxes2):
-    boxx = tf.square(boxes1[:, :, :, :, 2:4])
-    boxes1_square = boxx[:, :, :, :, 0] * boxx[:, :, :, :, 1]
-    box = tf.stack([boxes1[:, :, :, :, 0] - boxx[:, :, :, :, 0] * 0.5,
-                    boxes1[:, :, :, :, 1] - boxx[:, :, :, :, 1] * 0.5,
-                    boxes1[:, :, :, :, 0] + boxx[:, :, :, :, 0] * 0.5,
-                    boxes1[:, :, :, :, 1] + boxx[:, :, :, :, 1] * 0.5])
-    boxes1 = tf.transpose(box, (1, 2, 3, 4, 0))
+def calc_iou(boxes1, boxes2): # boxes1 => pred , boxes2 => true
+    boxx = tf.square(boxes1[:, :, :, :, 2:4]) # pred.w^2 & pred.l^2
+    boxes1_square = boxx[:, :, :, :, 0] * boxx[:, :, :, :, 1] # pred.w^2 X pred.l^2
+    box = tf.stack([boxes1[:, :, :, :, 0] - boxx[:, :, :, :, 0] * 0.5, # pred.x - pred.w^2 * 0.5 => x_min
+                    boxes1[:, :, :, :, 1] - boxx[:, :, :, :, 1] * 0.5, # pred.y - pred.l^2 * 0.5 => y_min
+                    boxes1[:, :, :, :, 0] + boxx[:, :, :, :, 0] * 0.5, # x_max
+                    boxes1[:, :, :, :, 1] + boxx[:, :, :, :, 1] * 0.5]) # y_max
+    boxes1 = tf.transpose(box, (1, 2, 3, 4, 0)) # (4, 38, 38, 5, 4)
 
     boxx = tf.square(boxes2[:, :, :, :, 2:4])
     boxes2_square = boxx[:, :, :, :, 0] * boxx[:, :, :, :, 1]
@@ -418,87 +421,111 @@ def calc_iou(boxes1, boxes2):
                     boxes2[:, :, :, :, 1] + boxx[:, :, :, :, 1] * 0.5])
     boxes2 = tf.transpose(box, (1, 2, 3, 4, 0))
 
-    left_up = tf.maximum(boxes1[:, :, :, :, :2], boxes2[:, :, :, :, :2])
-    right_down = tf.minimum(boxes1[:, :, :, :, 2:], boxes2[:, :, :, :, 2:])
+    left_up = tf.maximum(boxes1[:, :, :, :, :2], boxes2[:, :, :, :, :2]) # (4, 38, 38, 5, 2)
+    right_down = tf.minimum(boxes1[:, :, :, :, 2:], boxes2[:, :, :, :, 2:]) # (4, 38, 38, 5, 2)
 
-    intersection = tf.maximum(right_down - left_up, 0.0)
-    inter_square = intersection[:, :, :, :, 0] * intersection[:, :, :, :, 1]
-    union_square = boxes1_square + boxes2_square - inter_square
+    intersection = tf.maximum(right_down - left_up, 0.0) # (4, 38, 38, 5, 2)
+    inter_square = intersection[:, :, :, :, 0] * intersection[:, :, :, :, 1] # (4, 38, 38, 5)
+    union_square = boxes1_square + boxes2_square - inter_square # (4, 38, 38, 5)
 
-    return tf.clip_by_value(1.0 * inter_square / union_square, 0.0, 1.0)
+    return tf.clip_by_value(1.0 * inter_square / union_square, 0.0, 1.0) # (4,38,38,5)
 
 def my_yolo3d_loss(y_true, y_pred):
-    predict = tf.reshape(y_pred, [BATCH_SIZE, GRID_W, GRID_H, BOX, 7+1+CLASS])
+    #predict = tf.reshape(y_pred, [BATCH_SIZE, GRID_W, GRID_H, BOX, 7+1+CLASS])
     
-    xy_coordinate = tf.reshape(predict[:,:,:,:,:2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
-    wl_coordinate = tf.reshape(predict[:,:,:,:,3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    # xy_coordinate = tf.reshape(y_pred[:,:,:,:,:2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    # wl_coordinate = tf.reshape(y_pred[:,:,:,:,3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    # box_coordinate = tf.concat([xy_coordinate, wl_coordinate], axis=-1)
+
+    # z_coordinate = tf.reshape(y_pred[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    # h_coordinate = tf.reshape(y_pred[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+
+    xy_coordinate = y_pred[:,:,:,:,:2]
+    wl_coordinate = y_pred[:,:,:,:,3:5]
     box_coordinate = tf.concat([xy_coordinate, wl_coordinate], axis=-1)
 
-    z_coordinate = tf.reshape(predict[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    h_coordinate = tf.reshape(predict[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    z_coordinate = y_pred[:,:,:,:,2]
+    h_coordinate = y_pred[:,:,:,:,5]
 
-    yaw_coordinate = tf.reshape(predict[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    #yaw_coordinate = tf.reshape(y_pred[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    yaw_coordinate = y_pred[:,:,:,:,6] / np.pi # normalize by pi
 
-    box_confidence = tf.reshape(predict[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    #box_confidence = tf.reshape(y_pred[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    box_confidence = y_pred[:,:,:,:,7]
 
-    box_classes = tf.reshape(predict[:,:,:,:,8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+    #box_classes = tf.reshape(y_pred[:,:,:,:,8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+    box_classes = y_pred[:,:,:,:,8:]
 
     offset = np.transpose(np.reshape(np.array([np.arange(GRID_W)] * GRID_W * BOX),
-                                         [BOX, GRID_W, GRID_H]), (1, 2, 0))
-    offset = tf.reshape(tf.constant(offset, dtype=tf.float32), [1, GRID_W, GRID_H, BOX])
+                                         [BOX, GRID_W, GRID_H]), (1, 2, 0)) # (38,38,5)
+    offset = tf.reshape(tf.constant(offset, dtype=tf.float32), [1, GRID_W, GRID_H, BOX]) # (1,38,38,5)
     offset = tf.tile(offset, (BATCH_SIZE, 1, 1, 1))
 
     x_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 0])) + offset) / GRID_W
-    y_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(offset, (0, 2, 1, 3))) / GRID_W
+    y_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(offset, (0, 2, 1, 3))) / GRID_H
     
     w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_APOLLO[:5], [1, 1, 1, 5]) / GRID_W)
     l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_APOLLO[5:], [1, 1, 1, 5]) / GRID_H)
     #w_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(ANCHORS_NEW[:5], [1, 1, 1, 5]) / GRID_W)
     #l_exp = tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(ANCHORS_NEW[5:], [1, 1, 1, 5]) / GRID_H)
 
-    z_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * z_coordinate)))
-    h_exp = tf.sqrt(tf.exp(h_coordinate))
+    
+    z_sigmoid = (1.0 / (1.0 + tf.exp(-1.0 * z_coordinate))) / Z_RANGE
+    h_exp = tf.sqrt(tf.exp(h_coordinate)) / H_RANGE
 
     # stack adds 1 additional dimension
-    boxes1 = tf.stack([x_sigmoid, y_sigmoid, w_exp, l_exp])
-    box_coor_trans = tf.transpose(boxes1, (1,2,3,4,0))
+    boxes1 = tf.stack([x_sigmoid, y_sigmoid, w_exp, l_exp]) # (4, 4, 38, 38, 5)
+    box_coor_trans = tf.transpose(boxes1, (1,2,3,4,0)) # (4, 38, 38, 5, 4)
     box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
     box_classes = tf.nn.softmax(box_classes)
 
-    response = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
-    xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
-    wl_true = tf.reshape(y_true[:,:,:,:, 3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+######################################################################################################
+
+    # response = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+    # xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    # wl_true = tf.reshape(y_true[:,:,:,:, 3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    # boxes = tf.concat([xy_true, wl_true], axis=-1)
+    # classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+    
+    xy_true = y_true[:,:,:,:, :2]
+    #wl_true = y_true[:,:,:,:, 3:5]
+    wl_true = tf.sqrt(y_true[:,:,:,:, 3:5])
     boxes = tf.concat([xy_true, wl_true], axis=-1)
-    classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+    objectness = y_true[:,:,:,:,7]
+    classes = y_true[:,:,:,:, 8:]
+    
     #classes = tf.argmax(classes, -1)
 
-    z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    # z_true = tf.reshape(y_true[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    # h_true = tf.reshape(y_true[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
     
-    yaw_true = tf.reshape(y_true[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    # yaw_true = tf.reshape(y_true[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    z_true = y_true[:,:,:,:,2]
+    h_true = tf.sqrt(y_true[:,:,:,:,5])
+    
+    yaw_true =y_true[:,:,:,:,6]
 
-    iou = calc_iou(box_coor_trans, boxes)
-    best_box = tf.cast(tf.equal(iou, tf.reduce_max(iou, axis=-1, keep_dims=True)), tf.float32)
-    confs = tf.expand_dims(best_box * response, axis=4)
+    iou = calc_iou(box_coor_trans, boxes) # 0.0 - 1.0 iou value , shape = (4,38,38,5)
+    best_box = tf.cast(tf.equal(iou, tf.reduce_max(iou, axis=-1, keep_dims=True)), tf.float32) # (4,38,38,5)
+    confs = tf.expand_dims(best_box * objectness, axis=4) #(4,38,38,5,1)
 
-    conf_id = NO_OBJECT_SCALE * (1.0 - confs) + OBJECT_SCALE * confs
-    prob_id = CLASS_SCALE * confs
-    coor_id = COORD_SCALE * confs
-    yaw_id = YAW_SCALE * confs
+    conf_id = NO_OBJECT_SCALE * (1.0 - confs) + OBJECT_SCALE * confs # (4, 38, 38, 5, 1)
+    prob_id = CLASS_SCALE * confs #(4, 38, 38, 5, 1)
+    coor_id = COORD_SCALE * confs #(4, 38, 38, 5, 1)
+    yaw_id = YAW_SCALE * confs #(4, 38, 38, 5, 1)
 
-    conf_loss = conf_id * tf.square(box_confidence - confs)
-    prob_loss = prob_id * tf.square(box_classes - classes)
+    
+    coor_loss = coor_id * tf.square(box_coor_trans - boxes) # (4,38,38,5,4) [x,y,sqrt(w),sqrt(l)]
+    z_loss = coor_id * tf.square(z_true - z_sigmoid) # (4,38,38,5,1)
+    h_loss = coor_id * tf.square(h_true - h_exp) # (4,38,38,5,1)
+    yaw_loss = yaw_id * tf.square(yaw_true - yaw_coordinate) # (4,38,38,5,1)
+
+    conf_loss = conf_id * tf.square(box_confidence - confs) # (4,38,38,5,1)
+    prob_loss = prob_id * tf.square(box_classes - classes) # (4,38,38,5,5)
     #prob_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits = box_classes, labels=classes)
     #prob_loss = prob_id * tf.expand_dims(prob_loss, axis=-1)
-    coor_loss = coor_id * tf.square(box_coor_trans - boxes)
-    z_loss = coor_id * tf.square(z_true - z_sigmoid)
-    h_loss = coor_id * tf.square(h_true - h_exp)
-    yaw_loss = yaw_id * tf.square(yaw_true - yaw_coordinate)
 
-    loss = tf.concat([conf_loss, prob_loss, coor_loss, z_loss, h_loss, yaw_loss], axis=4)
-    # loss = tf.concat([conf_loss, prob_loss, coor_loss], axis=4)
     
-    loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss')
 
     ###############debug################
     _conf_loss = tf.reduce_sum(conf_loss)
@@ -519,4 +546,9 @@ def my_yolo3d_loss(y_true, y_pred):
     _loss = tf.Print(_loss, [_yaw_loss], message="Loss Yaw \t", summarize=1000)
     _loss = tf.Print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
 
-    return _loss
+    loss = tf.concat([conf_loss, prob_loss, coor_loss, z_loss, h_loss, yaw_loss], axis=4) # (4,38,38,5,13)
+    # loss = tf.concat([conf_loss, prob_loss, coor_loss], axis=4)
+    
+    loss = tf.reduce_mean(tf.reduce_sum(loss, axis=[1,2,3,4]), name = 'loss') # (4,1,1,1,1) -> mean -> (1)
+
+    return loss
