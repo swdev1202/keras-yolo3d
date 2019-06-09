@@ -510,13 +510,13 @@ def my_yolo3d_loss(y_true, y_pred):
 
     _loss = _conf_loss + _prob_loss + _coor_loss + _z_loss + _h_loss + _yaw_loss
 
-    _loss = tf.print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
+    _loss = tf.Print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
     _loss = tf.Print(_loss, [_conf_loss], message="Loss Conf \t", summarize=1000)
     _loss = tf.Print(_loss, [_prob_loss], message="Loss Prob \t", summarize=1000)
     _loss = tf.Print(_loss, [_coor_loss], message="Loss Coor \t", summarize=1000)
     _loss = tf.Print(_loss, [_z_loss], message="Loss Z \t", summarize=1000)
     _loss = tf.Print(_loss, [_h_loss], message="Loss H \t", summarize=1000)
     _loss = tf.Print(_loss, [_yaw_loss], message="Loss Yaw \t", summarize=1000)
-    _loss = tf.print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
+    _loss = tf.Print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
 
     return _loss
