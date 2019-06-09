@@ -148,6 +148,7 @@ def parse_annotations(ann_file, img_dir):
 
 # all_imgs, seen_labels = parse_annotations(train_ann, train_images_dir)
 
+'''
 class BatchGenerator(Sequence):
     def __init__(self, images, config, name, shuffle=True, jitter=True, norm=None):
         self.generator = None
@@ -318,7 +319,7 @@ class BatchGenerator(Sequence):
         print("*************")
         print('new batch created', idx)
         return [x_batch, b_batch], y_batch
-
+'''
 
 class MyGenerator(Sequence):
     def __init__(self, images, config, name, shuffle=True, norm=None):
@@ -410,22 +411,26 @@ class MyGenerator(Sequence):
             for obj in all_objs:
                 if obj['xmax'] > obj['xmin'] and obj['ymax'] > obj['ymin'] and obj['name'] in self.config['LABELS']: # sanity check
                     center_x = .5*(obj['xmin'] + obj['xmax'])
-                    center_x = center_x / (float(self.config['IMAGE_W']) / self.config['GRID_W'])
+                    #center_x = center_x / (float(self.config['IMAGE_W']) / self.config['GRID_W'])
+                    center_x = center_x / float(self.config['IMAGE_W'])
                     center_y = .5*(obj['ymin'] + obj['ymax'])
-                    center_y = center_y / (float(self.config['IMAGE_H']) / self.config['GRID_H'])
+                    #center_y = center_y / (float(self.config['IMAGE_H']) / self.config['GRID_H'])
+                    center_y = center_y / (float(self.config['IMAGE_H'])
                     center_z = obj['z']
                     yaw = obj['yaw']
                     height = obj['height']
 
                     # grid location -> GRID(x,y)
-                    grid_x = int(np.floor(center_x))
-                    grid_y = int(np.floor(center_y))
+                    grid_x = int(np.floor(center_x) * self.config['GRID_W'])
+                    grid_y = int(np.floor(center_y) * self.config['GRID_H'])
 
                     if grid_x < self.config['GRID_W'] and grid_y < self.config['GRID_H']: # sanity check
                         obj_indx  = self.config['LABELS'].index(obj['name']) # get the index of a given object(name)
                         
-                        center_w = (obj['xmax'] - obj['xmin']) / (float(self.config['IMAGE_W']) / self.config['GRID_W']) # unit: grid cell
-                        center_l = (obj['ymax'] - obj['ymin']) / (float(self.config['IMAGE_H']) / self.config['GRID_H']) # unit: grid cell
+                        # center_w = (obj['xmax'] - obj['xmin']) / (float(self.config['IMAGE_W']) / self.config['GRID_W']) # unit: grid cell
+                        # center_l = (obj['ymax'] - obj['ymin']) / (float(self.config['IMAGE_H']) / self.config['GRID_H']) # unit: grid cell
+                        center_w = (obj['xmax'] - obj['xmin']) / (float(self.config['IMAGE_W']) 
+                        center_l = (obj['ymax'] - obj['ymin']) / (float(self.config['IMAGE_H'])
                         
                         box = [center_x, center_y, center_z, center_w, center_l, height, yaw]
 
@@ -436,8 +441,8 @@ class MyGenerator(Sequence):
                         shifted_box = BoundBox(0, 
                                                0,
                                                0,
-                                               center_w,                                                
-                                               center_l,
+                                               int(center_w*self.config['IMAGE_W']),                                             
+                                               int(center_l*self.config['IMAGE_H']),
                                                0,
                                                0)
                         
