@@ -148,7 +148,7 @@ def parse_annotations(ann_file, img_dir):
 
 # all_imgs, seen_labels = parse_annotations(train_ann, train_images_dir)
 
-'''
+
 class BatchGenerator(Sequence):
     def __init__(self, images, config, name, shuffle=True, jitter=True, norm=None):
         self.generator = None
@@ -319,7 +319,7 @@ class BatchGenerator(Sequence):
         print("*************")
         print('new batch created', idx)
         return [x_batch, b_batch], y_batch
-'''
+
 
 class MyGenerator(Sequence):
     def __init__(self, images, config, name, shuffle=True, norm=None):
