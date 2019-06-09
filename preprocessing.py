@@ -415,7 +415,7 @@ class MyGenerator(Sequence):
                     center_x = center_x / float(self.config['IMAGE_W'])
                     center_y = .5*(obj['ymin'] + obj['ymax'])
                     #center_y = center_y / (float(self.config['IMAGE_H']) / self.config['GRID_H'])
-                    center_y = center_y / (float(self.config['IMAGE_H'])
+                    center_y = center_y / float(self.config['IMAGE_H'])
                     center_z = obj['z']
                     yaw = obj['yaw']
                     height = obj['height']
