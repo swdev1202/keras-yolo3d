@@ -11,6 +11,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import cv2
+from utils import decode_netout, draw_boxes
 
 #################################################
 ## Setup
@@ -34,6 +35,7 @@ NMS_THRESHOLD    = 0.3 #0.45
 ANCHORS          = np.multiply([39, 52, 18, 27, 27, 52, 29, 29, 24, 32], (GRID_H/IMAGE_H)).tolist()
 ANCHORS_NEW      = np.multiply([39, 18, 27, 29, 24, 52, 27, 52, 29, 32], (GRID_H/IMAGE_H)).tolist()
 ANCHORS_APOLLO    = np.multiply([15, 22, 4, 6, 12, 32, 65, 4, 14, 29], (GRID_H/IMAGE_H)).tolist()
+ANCHORS_APOLLO_INF = np.multiply([15, 32, 22, 65, 4, 4, 6, 14, 12, 29], (GRID_H/IMAGE_H)).tolist()
 NO_OBJECT_SCALE  = 1.0
 OBJECT_SCALE     = 5.0
 #OBJECT_SCALE     = 1.0
@@ -547,3 +549,45 @@ def my_yolo3d_loss(y_true, y_pred):
     _loss = tf.Print(_loss, [tf.zeros((1))], message='Dummy Line \t', summarize=1000)
 
     return loss
+
+
+def infer_image(weights, image_path, output_path, save_image=True):
+
+    model = create_yolo3d_model()
+
+    model.load_weights(weights)
+
+    filename = image_path.split("/")
+    filename = filename[-1]
+    filename = filename[:-4]
+
+    image = cv2.imread(image_path)
+    image = image[:,:,:2]
+    dummy_array = np.zeros((1,1,1,1,TRUE_BOX_BUFFER,7))
+
+    # plt.figure(figsize=(10,10))
+
+    input_image = cv2.resize(image, (608, 608))
+    input_image = input_image / 255.
+    input_image = input_image[:,:,::-1]
+    input_image = np.expand_dims(input_image, 0)
+
+    netout = model.predict([input_image, dummy_array])
+
+    boxes = decode_netout(netout[0], 
+                        obj_threshold=OBJ_THRESHOLD,
+                        nms_threshold=NMS_THRESHOLD,
+                        anchors=ANCHORS_APOLLO_INF, 
+                        nb_class=CLASS)
+
+    # plt.imshow(image[:,:,::-1]); plt.show()
+
+    if save_image:
+        ch1, ch2 = cv2.split(image)
+        ch3 = np.zeros(ch1.shape, dtype=ch1.dtype)
+        image = cv2.merge((ch1, ch2, ch3))
+        image = draw_boxes(image, boxes, labels=LABELS)
+        # cv2.imwrite(output_path + filename + "-predict.jpg", image)
+        # print("Image saved at " + output_path + filename + "-predict.jpg")
+        cv2.imwrite(output_path + "-predict.jpg", image)
+        print("Image saved at " + output_path + "test-predict.jpg")
