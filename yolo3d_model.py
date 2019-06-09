@@ -431,30 +431,30 @@ def calc_iou(boxes1, boxes2): # boxes1 => pred , boxes2 => true
     return tf.clip_by_value(1.0 * inter_square / union_square, 0.0, 1.0) # (4,38,38,5)
 
 def my_yolo3d_loss(y_true, y_pred):
-    #predict = tf.reshape(y_pred, [BATCH_SIZE, GRID_W, GRID_H, BOX, 7+1+CLASS])
+    predict = tf.reshape(y_pred, [BATCH_SIZE, GRID_W, GRID_H, BOX, 7+1+CLASS])
     
-    # xy_coordinate = tf.reshape(y_pred[:,:,:,:,:2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
-    # wl_coordinate = tf.reshape(y_pred[:,:,:,:,3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
-    # box_coordinate = tf.concat([xy_coordinate, wl_coordinate], axis=-1)
-
-    # z_coordinate = tf.reshape(y_pred[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    # h_coordinate = tf.reshape(y_pred[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-
-    xy_coordinate = y_pred[:,:,:,:,:2]
-    wl_coordinate = y_pred[:,:,:,:,3:5]
+    xy_coordinate = tf.reshape(y_pred[:,:,:,:,:2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    wl_coordinate = tf.reshape(y_pred[:,:,:,:,3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
     box_coordinate = tf.concat([xy_coordinate, wl_coordinate], axis=-1)
 
-    z_coordinate = y_pred[:,:,:,:,2]
-    h_coordinate = y_pred[:,:,:,:,5]
+    z_coordinate = tf.reshape(y_pred[:,:,:,:,2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    h_coordinate = tf.reshape(y_pred[:,:,:,:,5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
 
-    #yaw_coordinate = tf.reshape(y_pred[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    yaw_coordinate = y_pred[:,:,:,:,6] / np.pi # normalize by pi
+    # xy_coordinate = y_pred[:,:,:,:,:2]
+    # wl_coordinate = y_pred[:,:,:,:,3:5]
+    # box_coordinate = tf.concat([xy_coordinate, wl_coordinate], axis=-1)
 
-    #box_confidence = tf.reshape(y_pred[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
-    box_confidence = y_pred[:,:,:,:,7]
+    # z_coordinate = y_pred[:,:,:,:,2]
+    # h_coordinate = y_pred[:,:,:,:,5]
 
-    #box_classes = tf.reshape(y_pred[:,:,:,:,8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
-    box_classes = y_pred[:,:,:,:,8:]
+    yaw_coordinate = tf.reshape(y_pred[:,:,:,:,6], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    #yaw_coordinate = y_pred[:,:,:,:,6] / np.pi # normalize by pi
+
+    box_confidence = tf.reshape(y_pred[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX, 1])
+    #box_confidence = y_pred[:,:,:,:,7]
+
+    box_classes = tf.reshape(y_pred[:,:,:,:,8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+    #box_classes = y_pred[:,:,:,:,8:]
 
     offset = np.transpose(np.reshape(np.array([np.arange(GRID_W)] * GRID_W * BOX),
                                          [BOX, GRID_W, GRID_H]), (1, 2, 0)) # (38,38,5)
@@ -481,18 +481,18 @@ def my_yolo3d_loss(y_true, y_pred):
 
 ######################################################################################################
 
-    # response = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
-    # xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
-    # wl_true = tf.reshape(y_true[:,:,:,:, 3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
-    # boxes = tf.concat([xy_true, wl_true], axis=-1)
-    # classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
-    
-    xy_true = y_true[:,:,:,:, :2]
-    #wl_true = y_true[:,:,:,:, 3:5]
-    wl_true = tf.sqrt(y_true[:,:,:,:, 3:5])
+    objectness = tf.reshape(y_true[:,:,:,:,7], [BATCH_SIZE, GRID_W, GRID_H, BOX])
+    xy_true = tf.reshape(y_true[:,:,:,:, :2], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
+    wl_true = tf.reshape(y_true[:,:,:,:, 3:5], [BATCH_SIZE, GRID_W, GRID_H, BOX, 2])
     boxes = tf.concat([xy_true, wl_true], axis=-1)
-    objectness = y_true[:,:,:,:,7]
-    classes = y_true[:,:,:,:, 8:]
+    classes = tf.reshape(y_true[:,:,:,:, 8:], [BATCH_SIZE, GRID_W, GRID_H, BOX, CLASS])
+    
+    # xy_true = y_true[:,:,:,:, :2]
+    # wl_true = y_true[:,:,:,:, 3:5]
+    # wl_true = tf.sqrt(y_true[:,:,:,:, 3:5])
+    # boxes = tf.concat([xy_true, wl_true], axis=-1)
+    # objectness = y_true[:,:,:,:,7]
+    # classes = y_true[:,:,:,:, 8:]
     
     #classes = tf.argmax(classes, -1)
 
