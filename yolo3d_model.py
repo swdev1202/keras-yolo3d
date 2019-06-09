@@ -43,7 +43,7 @@ YAW_SCALE        = 1.0
 Z_RANGE          = 2.0
 H_RANGE          = 4.0
 
-BATCH_SIZE       = 20
+BATCH_SIZE       = 16
 WARM_UP_BATCHES  = 0
 TRUE_BOX_BUFFER  = 20
 
